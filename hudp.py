@@ -99,7 +99,7 @@ class HUDPPacket:
         return packet
 
     def toBytes(self) -> bytes:
-        packet = struct.pack("!QIIH", self.time, self.seq, self.ack, self.checksum) + self.flags.toBytes()
+        packet = struct.pack("!QIIH", self.time, self.seq, self.ack, self.checksum) + self.flags.toBytes() + self.content
         assert (len(packet) >= 20)
         return packet
 

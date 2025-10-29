@@ -7,7 +7,7 @@ import random
 
 def getCurrentTimeString() -> str:
     timeString = datetime.now().strftime("%M:%S:%f")[:-3]
-    return f"[{timeString}]:"
+    return f"[{timeString}]"
 
 
 def printDropped() -> str:
@@ -25,7 +25,7 @@ def handleServerPacket(sock: socket.socket, data: bytes, dropRate: float) -> str
     if random.random() < dropRate:
         printDropped()
         return
-    sock.sendto(data, ('127.0.0.11', CLIENT_PORT))
+    sock.sendto(data, ('127.0.0.1', CLIENT_PORT))
 
 
 def main():
@@ -34,11 +34,12 @@ def main():
     while True:
         data, address = sock.recvfrom(16384)
         packet = HUDPPacket.fromBytes(data)
-        print(f"{getCurrentTimeString()} {packet}", end='')
         if address[1] == CLIENT_PORT:
-            handleClientPacket(sock, data, 0.5)
+            print(f"{getCurrentTimeString()} C -> S: {packet}", end='')
+            handleClientPacket(sock, data, 0.25)
         elif address[1] == SERVER_PORT:
-            handleServerPacket(sock, data, 0.5)
+            print(f"{getCurrentTimeString()} S -> C: {packet}", end='')
+            handleServerPacket(sock, data, 0.25)
         else:
             print("NOT SUPPOSED TO HAPPEN")
 
