@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 import struct
 import time
 
@@ -116,10 +117,6 @@ class HUDPPacket:
         )
 
     def __str__(self):
-        return (
-            f"Timestamp: {self.time}\n"
-            f"Sequence: {self.seq}\n"
-            f"Acknowledge: {self.ack}\n"
-            f"Checksum: {self.checksum}\n"
-            f"Flags: {self.flags}"
-        )
+        time = datetime.fromtimestamp(self.time / 1000)
+        timeString = time.strftime("%M:%S:%f")[:-3]
+        return f"[{timeString}] SEQ: {self.seq:>5} ACK: {self.ack:>5} Flags: {self.flags}"

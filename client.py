@@ -1,12 +1,11 @@
 from api import GameNetAPI
-
-FORWARD = 55000
+from common import CLIENT_PORT, FORWARDER_PORT
 
 
 def main():
     api = GameNetAPI()
-    api.bind('127.0.0.1', 50000)
-    api.connect('127.0.0.1', 55000)
+    api.bind('127.0.0.1', CLIENT_PORT)
+    api.connect('127.0.0.1', FORWARDER_PORT)
 
 
 main()

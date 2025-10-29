@@ -1,33 +1,45 @@
 from hudp import HUDPPacket
+from common import CLIENT_PORT, SERVER_PORT, FORWARDER_PORT
+from datetime import datetime
 import socket
 import random
 
-CLIENT_PORT = 50000
-SERVER_PORT = 60000
+
+def getCurrentTimeString() -> str:
+    timeString = datetime.now().strftime("%M:%S:%f")[:-3]
+    return f"[{timeString}]:"
+
+
+def printDropped() -> str:
+    return print("\033[41m DROPPED \033[0m", end='')
+
+
+def handleClientPacket(sock: socket.socket, data: bytes, dropRate: float) -> str:
+    if random.random() < dropRate:
+        printDropped()
+        return
+    sock.sendto(data, ('127.0.0.1', SERVER_PORT))
+
+
+def handleServerPacket(sock: socket.socket, data: bytes, dropRate: float) -> str:
+    if random.random() < dropRate:
+        printDropped()
+        return
+    sock.sendto(data, ('127.0.0.11', CLIENT_PORT))
 
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(('0.0.0.0', 55000))
+    sock.bind(('127.0.0.1', FORWARDER_PORT))
     while True:
         data, address = sock.recvfrom(16384)
         packet = HUDPPacket.fromBytes(data)
-        print(packet)
+        print(f"{getCurrentTimeString()} {packet}", end='')
         if address[1] == CLIENT_PORT:
-            if packet.flags.isSyn and random.random() < 0.4:
-                print("DROPPED")
-                continue
-            if packet.flags.isAck and random.random() < 0.4:
-                print("DROPPED")
-                continue
-            sock.sendto(data, ('127.0.0.1', SERVER_PORT))
+            handleClientPacket(sock, data, 0.5)
         elif address[1] == SERVER_PORT:
-            if packet.flags.isSyn and packet.flags.isAck and random.random() < 0.4:
-                print("DROPPED")
-                continue
-            sock.sendto(data, ('127.0.0.1', CLIENT_PORT))
+            handleServerPacket(sock, data, 0.5)
         else:
-            print(address)
             print("NOT SUPPOSED TO HAPPEN")
 
         print()
