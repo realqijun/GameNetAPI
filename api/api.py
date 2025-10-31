@@ -24,7 +24,7 @@ class GameNetAPI:
         self.seq: int = 0
         self.rec: int = 0
         self.ack: int = 0
-        self.sendAckNext: bool = False
+        self.sendAckNext: bool = False  # Chaange to a state in routine
         self.waitingSeq: int = -1
         self.timeSinceWaitingSeq: float = -1
         self.sendBufferLock: Lock = Lock()

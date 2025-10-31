@@ -120,3 +120,6 @@ class HUDPPacket:
         time = datetime.fromtimestamp(self.time / 1000)
         timeString = time.strftime("%M:%S:%f")[:-3]
         return f"[{timeString}] SEQ: {self.seq:>5} ACK: {self.ack:>5} Flags: {self.flags}"
+
+    def __lt__(self, other: HUDPPacket):
+        return self.seq < other.seq
