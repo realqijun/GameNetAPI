@@ -7,6 +7,16 @@ from hudp import HUDPPacket
 
 
 class GNSStateSynSent(GNSState):
+    """
+    SYN_SENT happens after user calls connect() on the socket.
+
+    In this state, the socket (1) waits for the expected SYN ACK to come, send back the appropriate ACK
+    and transition into ESTABLISHED, (2) waits for SYN packet from remote, notice the simultaneous open,
+    send back SYN ACK and transition into SYN_RCVD or (3) terminates if a RST packet arrives from remote.
+
+    All other packets are dropped and ignored.
+    """
+
     def process(self, context: GNSContext) -> GNSState:
         recvLen = context.recvWindow.qsize()
         for _ in range(recvLen):
@@ -19,7 +29,7 @@ class GNSStateSynSent(GNSState):
                 context.sendWindow.put(SendingHUDPPacket(ack))
                 context.connectSemaphore.release()
                 return GNSStateEstablished()
-            elif packet.isPureSyn():  # Simultaneous open
+            elif packet.isSyn():  # Simultaneous open
                 context.ack = packet.ack + 1
                 synAck = HUDPPacket.create(context.seq, context.ack, bytes(), isReliable=True, isSyn=True, isAck=True)
                 context.seq += 1

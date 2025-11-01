@@ -35,11 +35,11 @@ def main():
         data, address = sock.recvfrom(16384)
         packet = HUDPPacket.fromBytes(data)
         if address[1] == CLIENT_PORT:
-            print(f"{getCurrentTimeString()} C -> S: {packet}", end='')
-            handleClientPacket(sock, data, 0.25)
+            print(f"{getCurrentTimeString()} \033[42m C -> S \033[0m: {packet}", end='')
+            handleClientPacket(sock, data, 0)
         elif address[1] == SERVER_PORT:
-            print(f"{getCurrentTimeString()} S -> C: {packet}", end='')
-            handleServerPacket(sock, data, 0.25)
+            print(f"{getCurrentTimeString()} \033[44m S -> C \033[0m: {packet}", end='')
+            handleServerPacket(sock, data, 0)
         else:
             print("NOT SUPPOSED TO HAPPEN")
 

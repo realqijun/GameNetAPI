@@ -5,6 +5,15 @@ from api.gnscontext import GNSContext
 
 
 class GNSStateSynRcvd(GNSState):
+    """
+    SYN_RCVD happens after the ACCEPT state, when SYN ACK packet has been sent to remote.
+
+    In this state, the socket (1) waits for the expected ACK to come and transition into ESTABLISHED
+    or (2) terminates if a RST packet arrives from remote.
+
+    All other packets are dropped and ignored.
+    """
+
     def process(self, context: GNSContext) -> GNSState:
         recvLen = context.recvWindow.qsize()
         for _ in range(recvLen):
