@@ -48,6 +48,9 @@ class GNSContext:
         self.bindAddrPort: AddrPort = None
         self.destAddrPort: AddrPort = None
         self.tempDestAddrPort: AddrPort = None
+        self.receivedPacket: bool = False
 
         self.acceptSemaphore: Semaphore = Semaphore(0)
         self.connectSemaphore: Semaphore = Semaphore(0)
+        self.closeSemaphore: Semaphore = Semaphore(0)
+        self.stateSemaphore: Semaphore = Semaphore(1)

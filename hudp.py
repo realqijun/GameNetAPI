@@ -55,7 +55,7 @@ class HUDPFlags:
             string += "FIN "
         if self.isRst:
             string += "RST "
-        return string
+        return string[:-1]
 
 
 class HUDPPacket:
@@ -112,13 +112,13 @@ class HUDPPacket:
     def isSynAck(self) -> bool:
         return self.flags.toInteger() == 0b0001_1100
 
-    def isSyn(self) -> bool:
+    def isPureSyn(self) -> bool:
         return self.flags.toInteger() == 0b0001_0100
 
-    def isAck(self) -> bool:
+    def isPureAck(self) -> bool:
         return self.flags.toInteger() == 0b0000_1000
 
-    def isFin(self) -> bool:
+    def isPureFin(self) -> bool:
         return self.flags.toInteger() == 0b0001_0010
 
     def isRst(self) -> bool:
@@ -129,6 +129,9 @@ class HUDPPacket:
 
     def isUnreliable(self) -> bool:
         return not self.flags.isReliable
+
+    def isDataPacket(self):
+        return len(self.content) > 0
 
     def __eq__(self, other: HUDPPacket):
         if not isinstance(other, HUDPPacket):
@@ -146,7 +149,7 @@ class HUDPPacket:
     def __str__(self):
         time = datetime.fromtimestamp(self.time / 1000)
         timeString = time.strftime("%M:%S:%f")[:-3]
-        return f"[{timeString}] SEQ: {self.seq:>5} ACK: {self.ack:>5} Flags: {self.flags}"
+        return f"[{timeString}] SEQ: {self.seq:>5} ACK: {self.ack:>5} Flags: {self.flags} {"DATA" if self.isDataPacket() else ""}"
 
     def __lt__(self, other: HUDPPacket):
         return self.seq < other.seq

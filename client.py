@@ -7,6 +7,8 @@ def main():
     sock.connect(('127.0.0.1', FORWARDER_PORT))
     for i in range(10):
         sock.send(f"I am Minh {i}".encode('utf-8'), True)
-
+    sock.close()
+    while True:
+        print(sock.recv().decode(encoding='utf-8'), flush=True)
 
 main()

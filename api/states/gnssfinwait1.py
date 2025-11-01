@@ -1,12 +1,13 @@
-from api.states.gnssclosewait import GNSStateCloseWait
+from api.states.gnssclosing import GNSStateClosing
 from api.states.gnsstate import GNSState
-from api.gnscontext import GNSContext, SendingHUDPPacket, RecvingHUDPPacket
+from api.states.gnssfinwait2 import GNSStateFinWait2
+from api.gnscontext import GNSContext, SendingHUDPPacket
 from api.states.gnssterminated import GNSStateTerminated
 from hudp import HUDPPacket
 import time
 
 
-class GNSStateEstablished(GNSState):
+class GNSStateFinWait1(GNSState):
     def __init__(self):
         self.timeOnCurrentAck = time.time()
 
@@ -17,14 +18,18 @@ class GNSStateEstablished(GNSState):
         for _ in range(recvLen):
             recvingPacket = context.recvWindow.get()
             packet = recvingPacket.packet
-            if packet.isSynAck() and packet.seq + 1 == context.ack:
-                ack = HUDPPacket.create(context.rec, context.ack, bytes(), isAck=True)
-                context.sendWindow.put(SendingHUDPPacket(ack))
+            if packet.isPureAck() and packet.ack == context.seq:
+                context.rec = packet.ack
+                context.closeSemaphore.release()
+                return GNSStateFinWait2()
             elif packet.isPureFin() and packet.seq == context.ack:
                 context.ack = packet.seq + 1
                 ack = HUDPPacket.create(context.seq, context.ack, bytes(), isAck=True)
                 context.sendWindow.put(SendingHUDPPacket(ack))
-                return GNSStateCloseWait()
+                return GNSStateClosing()
+            elif packet.isSynAck() and packet.seq + 1 == context.ack:
+                ack = HUDPPacket.create(context.rec, context.ack, bytes(), isAck=True)
+                context.sendWindow.put(SendingHUDPPacket(ack))
             elif packet.isRst() and packet.seq == context.ack:
                 return GNSStateTerminated()
             elif packet.isPureAck():
@@ -51,6 +56,5 @@ class GNSStateEstablished(GNSState):
             recvingPacket = context.recvWindow.get()
             context.ack = recvingPacket.packet.seq
             context.recvWindow.put(recvingPacket)
-
 
         return self

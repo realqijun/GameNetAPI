@@ -1,12 +1,12 @@
-from api.states.gnssclosewait import GNSStateCloseWait
 from api.states.gnsstate import GNSState
-from api.gnscontext import GNSContext, SendingHUDPPacket, RecvingHUDPPacket
 from api.states.gnssterminated import GNSStateTerminated
+from api.states.gnsstimewait import GNSStateTimeWait
+from api.gnscontext import GNSContext, SendingHUDPPacket
 from hudp import HUDPPacket
 import time
 
 
-class GNSStateEstablished(GNSState):
+class GNSStateFinWait2(GNSState):
     def __init__(self):
         self.timeOnCurrentAck = time.time()
 
@@ -14,21 +14,22 @@ class GNSStateEstablished(GNSState):
         initialAck = context.ack
 
         recvLen = context.recvWindow.qsize()
+
         for _ in range(recvLen):
             recvingPacket = context.recvWindow.get()
             packet = recvingPacket.packet
-            if packet.isSynAck() and packet.seq + 1 == context.ack:
-                ack = HUDPPacket.create(context.rec, context.ack, bytes(), isAck=True)
-                context.sendWindow.put(SendingHUDPPacket(ack))
-            elif packet.isPureFin() and packet.seq == context.ack:
+            if packet.isPureFin() and packet.seq == context.ack:
                 context.ack = packet.seq + 1
                 ack = HUDPPacket.create(context.seq, context.ack, bytes(), isAck=True)
                 context.sendWindow.put(SendingHUDPPacket(ack))
-                return GNSStateCloseWait()
-            elif packet.isRst() and packet.seq == context.ack:
-                return GNSStateTerminated()
+                return GNSStateTimeWait()
             elif packet.isPureAck():
                 context.rec = max(context.rec, packet.ack)
+            elif packet.isSynAck() and packet.seq + 1 == context.ack:
+                ack = HUDPPacket.create(context.rec, context.ack, bytes(), isAck=True)
+                context.sendWindow.put(SendingHUDPPacket(ack))
+            elif packet.isRst() and packet.seq == context.ack:
+                return GNSStateTerminated()
             elif packet.isDataPacket():
                 if packet.seq < context.ack:
                     continue
@@ -51,6 +52,5 @@ class GNSStateEstablished(GNSState):
             recvingPacket = context.recvWindow.get()
             context.ack = recvingPacket.packet.seq
             context.recvWindow.put(recvingPacket)
-
 
         return self

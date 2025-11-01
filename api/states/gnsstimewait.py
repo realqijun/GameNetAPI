@@ -2,9 +2,13 @@ from api.states.gnsstate import GNSState
 from api.gnscontext import GNSContext, SendingHUDPPacket
 from api.states.gnssterminated import GNSStateTerminated
 from hudp import HUDPPacket
+import time
 
 
-class GNSStateCloseWait(GNSState):
+class GNSStateTimeWait(GNSState):
+    def __init__(self):
+        self.initialTime = time.time()
+
     def process(self, context: GNSContext) -> GNSState:
         recvLen = context.recvWindow.qsize()
         for _ in range(recvLen):
@@ -13,9 +17,8 @@ class GNSStateCloseWait(GNSState):
             if packet.isPureFin() and packet.seq + 1 == context.ack:
                 ack = HUDPPacket.create(context.seq, context.ack, bytes(), isAck=True)
                 context.sendWindow.put(SendingHUDPPacket(ack))
-            elif packet.isPureAck():
-                context.rec = max(context.rec, packet.ack)
-            elif packet.isRst():
-                return GNSStateTerminated()
+
+        if time.time() - self.initialTime > 120.000:
+            return GNSStateTerminated()
 
         return self

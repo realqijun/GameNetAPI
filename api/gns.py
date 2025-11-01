@@ -1,6 +1,9 @@
 from api.gnscontext import GNSContext, SendingHUDPPacket, RecvingHUDPPacket
+from api.states.gnssclosewait import GNSStateCloseWait
+from api.states.gnssfinwait1 import GNSStateFinWait1
 from api.states.gnssinitial import GNSStateInitial
 from api.states.gnssbinded import GNSStateBinded
+from api.states.gnsslastack import GNSStateLastAck
 from api.states.gnsslisten import GNSStateListen
 from api.states.gnssaccept import GNSStateAccept
 from api.states.gnsssynsent import GNSStateSynSent
@@ -21,18 +24,18 @@ class GameNetSocket:
             raise IllegalStateChangeException("Can only bind() an INITIAL socket")
         self.context.bindAddrPort = addrPort  # TODO: change this to sendAddrPort for more universal usage
         self.context.sock.bind(addrPort)
-        self.state = GNSStateBinded()
+        self.__transition(GNSStateBinded())
 
     def listen(self):
         if not isinstance(self.state, GNSStateBinded):
             raise IllegalStateChangeException("Can only listen() on a BOUND socket")
         Thread(target=self.__recv).start()
-        self.state = GNSStateListen()
+        self.__transition(GNSStateListen())
 
     def accept(self):
         if not isinstance(self.state, GNSStateListen):
             raise IllegalStateChangeException("Can only accept() on a LISTEN socket")
-        self.state = GNSStateAccept()
+        self.__transition(GNSStateAccept())
         Thread(target=self.__routine).start()
         Thread(target=self.__send).start()
         self.context.acceptSemaphore.acquire()
@@ -49,7 +52,7 @@ class GameNetSocket:
         syn = HUDPPacket.create(self.context.seq, 0, bytes(), isReliable=True, isSyn=True)
         self.context.seq += 1
         self.context.sendWindow.put(SendingHUDPPacket(syn))
-        self.state = GNSStateSynSent()
+        self.__transition(GNSStateSynSent())
         Thread(target=self.__recv).start()
         Thread(target=self.__routine).start()
         Thread(target=self.__send).start()
@@ -58,20 +61,36 @@ class GameNetSocket:
     def send(self, data: bytes, isReliable: bool):
         packet = HUDPPacket.create(self.context.seq, self.context.ack, data, isReliable=isReliable, isAck=isReliable)
         self.context.seq += len(data)
-        self.context.sendBuffer.put(SendingHUDPPacket(packet))
+        self.context.sendWindow.put(SendingHUDPPacket(packet))
 
     def recv(self) -> bytes:
         data = self.context.recvBuffer.get()
         return data
 
     def close(self):
-        pass
-        # TODO: Transition to closing here
+        fin = HUDPPacket.create(self.context.seq, self.context.ack, bytes(), isReliable=True, isFin=True)
+        self.context.seq += 1
+        self.context.sendWindow.put(SendingHUDPPacket(fin))
+        # TODO: THIS IS POTENTIALLY DANGEROUS
+        if isinstance(self.state, GNSStateCloseWait):
+            self.__transition(GNSStateLastAck())
+        else:
+            self.__transition(GNSStateFinWait1())
+        self.context.closeSemaphore.acquire()
+        return
+
+    def __transition(self, newState: GNSState):
+        print(type(newState))
+        self.context.stateSemaphore.acquire()
+        self.state = newState
+        self.context.stateSemaphore.release()
 
     def __routine(self):
         while True:
             newState = self.state.process(self.context)
-            self.state = newState
+            while type(self.state) is not type(newState):
+                self.__transition(newState)
+                newState = self.state.process(self.context)
             self.__updateSendWindow()
             time.sleep(0.010)
 
@@ -104,4 +123,6 @@ class GameNetSocket:
         while True:
             data, addrPort = self.context.sock.recvfrom(16384)
             if HUDPPacket.verifyChecksum(data):
+                packet = HUDPPacket.fromBytes(data)
+                self.context.receivedPacket = packet.isDataPacket()
                 self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))

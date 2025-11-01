@@ -10,15 +10,12 @@ class GNSStateAccept(GNSState):
         for _ in range(recvLen):
             recvingPacket = context.recvWindow.get()
             packet = recvingPacket.packet
-            if packet.isSyn():
-                context.ack = packet.ack + 1
+            if packet.isPureSyn():
+                context.ack = packet.seq + 1
                 context.destAddrPort = recvingPacket.addrPort
                 synAck = HUDPPacket.create(context.seq, context.ack, bytes(), isReliable=True, isSyn=True, isAck=True)
                 context.seq += 1
                 context.sendWindow.put(SendingHUDPPacket(synAck))
                 return GNSStateSynRcvd()
-            elif packet.isSynAck():
-                rst = HUDPPacket.create(0, packet.seq + 1, bytes(), isRst=True)
-                context.sendWindow.put(SendingHUDPPacket(rst))
 
         return self

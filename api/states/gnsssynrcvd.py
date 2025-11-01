@@ -10,14 +10,12 @@ class GNSStateSynRcvd(GNSState):
         for _ in range(recvLen):
             recvingPacket = context.recvWindow.get()
             packet = recvingPacket.packet
-            if packet.isAck() and packet.ack == context.seq:
+            if packet.isPureAck() and packet.ack == context.seq:
                 context.rec = packet.ack
                 context.acceptSemaphore.release()
                 return GNSStateEstablished()
             elif packet.isRst() and packet.ack == context.seq:
                 from api.states.gnssaccept import GNSStateAccept
                 return GNSStateAccept()
-            elif packet.isFin() and packet.ack == context.seq:
-                return GNSStateCloseWait()
 
         return self
