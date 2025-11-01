@@ -76,7 +76,7 @@ class HUDPPacket:
         return 0xFFFF - sum
 
     @staticmethod
-    def verifyChecksum(data: bytes) -> int:
+    def verifyChecksum(data: bytes) -> bool:
         return HUDPPacket.checksum1s(data) == 0
 
     @classmethod
@@ -116,18 +116,15 @@ class HUDPPacket:
         return self.flags.toInteger() == 0b0001_0100
 
     def isAck(self) -> bool:
-        return self.flags.toInteger() == 0b0001_1000
+        return self.flags.toInteger() == 0b0000_1000
 
     def isFin(self) -> bool:
         return self.flags.toInteger() == 0b0001_0010
 
-    def isPureAck(self) -> bool:
-        return self.isAck() and len(self.content) == 0
-
     def isRst(self) -> bool:
         return self.flags.toInteger() == 0b0000_0001
 
-    def getAck(self) -> int:
+    def calculateAck(self) -> int:
         return self.seq + len(self.content)
 
     def isUnreliable(self) -> bool:

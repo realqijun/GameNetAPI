@@ -18,7 +18,7 @@ class GNSStateAccept(GNSState):
                 context.sendWindow.put(SendingHUDPPacket(synAck))
                 return GNSStateSynRcvd()
             elif packet.isSynAck():
-                rst = HUDPPacket.create(0, 0, bytes(), isRst=True)
+                rst = HUDPPacket.create(0, packet.seq + 1, bytes(), isRst=True)
                 context.sendWindow.put(SendingHUDPPacket(rst))
 
         return self

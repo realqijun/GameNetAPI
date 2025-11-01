@@ -29,6 +29,8 @@ class RecvingHUDPPacket:
         self.packet = packet
         self.addrPort = addrPort
 
+    def __lt__(self, other: RecvingHUDPPacket):
+        return self.packet.seq < other.packet.seq
 
 class GNSContext:
     def __init__(self):
@@ -40,12 +42,12 @@ class GNSContext:
         self.sendWindow: Queue[SendingHUDPPacket] = Queue(maxsize=MAX_WINDOW_SIZE)
         self.sendBuffer: PriorityQueue[SendingHUDPPacket] = PriorityQueue(maxsize=MAX_BUFFER_SIZE)
 
-        self.recvWindow: Queue[RecvingHUDPPacket] = Queue(maxsize=MAX_WINDOW_SIZE)
-        self.recvBuffer: PriorityQueue[HUDPPacket] = PriorityQueue(maxsize=MAX_BUFFER_SIZE)
-        self.clientRecvBuffer: Queue[bytes] = Queue(maxsize=MAX_BUFFER_SIZE)
+        self.recvWindow: PriorityQueue[RecvingHUDPPacket] = PriorityQueue(maxsize=MAX_WINDOW_SIZE)
+        self.recvBuffer: Queue[bytes] = Queue(maxsize=MAX_BUFFER_SIZE)
 
         self.bindAddrPort: AddrPort = None
         self.destAddrPort: AddrPort = None
         self.tempDestAddrPort: AddrPort = None
 
         self.acceptSemaphore: Semaphore = Semaphore(0)
+        self.connectSemaphore: Semaphore = Semaphore(0)

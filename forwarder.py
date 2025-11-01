@@ -36,10 +36,10 @@ def main():
         packet = HUDPPacket.fromBytes(data)
         if address[1] == CLIENT_PORT:
             print(f"{getCurrentTimeString()} C -> S: {packet}", end='')
-            handleClientPacket(sock, data, 0.5)
+            handleClientPacket(sock, data, 0.25)
         elif address[1] == SERVER_PORT:
             print(f"{getCurrentTimeString()} S -> C: {packet}", end='')
-            handleServerPacket(sock, data, 0.5)
+            handleServerPacket(sock, data, 0.25)
         else:
             print("NOT SUPPOSED TO HAPPEN")
 

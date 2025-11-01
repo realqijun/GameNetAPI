@@ -1,3 +1,4 @@
+from api.states.gnssclosewait import GNSStateCloseWait
 from api.states.gnsstate import GNSState
 from api.states.gnssestablished import GNSStateEstablished
 from api.gnscontext import GNSContext
@@ -13,11 +14,10 @@ class GNSStateSynRcvd(GNSState):
                 context.rec = packet.ack
                 context.acceptSemaphore.release()
                 return GNSStateEstablished()
-            elif packet.isRst():
+            elif packet.isRst() and packet.ack == context.seq:
                 from api.states.gnssaccept import GNSStateAccept
                 return GNSStateAccept()
-            elif packet.isFin():
-                # TODO: Go to CLOSE_WAIT here
-                pass
+            elif packet.isFin() and packet.ack == context.seq:
+                return GNSStateCloseWait()
 
         return self

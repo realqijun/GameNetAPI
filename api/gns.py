@@ -25,7 +25,7 @@ class GameNetSocket:
 
     def listen(self):
         if not isinstance(self.state, GNSStateBinded):
-            raise IllegalStateChangeException("Can only listen() on a BINDED socket")
+            raise IllegalStateChangeException("Can only listen() on a BOUND socket")
         Thread(target=self.__recv).start()
         self.state = GNSStateListen()
 
@@ -53,16 +53,15 @@ class GameNetSocket:
         Thread(target=self.__recv).start()
         Thread(target=self.__routine).start()
         Thread(target=self.__send).start()
+        self.context.connectSemaphore.acquire()
 
     def send(self, data: bytes, isReliable: bool):
-        packet = HUDPPacket.create(self.context.seq, self.context.ack, data, isReliable=isReliable)
-        if isReliable:
-            packet.flags.isAck = True
+        packet = HUDPPacket.create(self.context.seq, self.context.ack, data, isReliable=isReliable, isAck=isReliable)
         self.context.seq += len(data)
         self.context.sendBuffer.put(SendingHUDPPacket(packet))
 
     def recv(self) -> bytes:
-        data = self.context.clientRecvBuffer.get()
+        data = self.context.recvBuffer.get()
         return data
 
     def close(self):
@@ -73,16 +72,19 @@ class GameNetSocket:
         while True:
             newState = self.state.process(self.context)
             self.state = newState
-            currentTime = time.time()
-            while self.context.sendBuffer.qsize() > 0:
-                sendingPacket = self.context.sendBuffer.get()
-                if sendingPacket.packet.seq < self.context.rec:
-                    continue
-                if sendingPacket.retryAt >= currentTime:
-                    self.context.sendBuffer.put(sendingPacket)
-                    break
-                self.context.sendWindow.put(sendingPacket)
+            self.__updateSendWindow()
             time.sleep(0.010)
+
+    def __updateSendWindow(self):
+        currentTime = time.time()
+        while self.context.sendBuffer.qsize() > 0:
+            sendingPacket = self.context.sendBuffer.get()
+            if sendingPacket.packet.seq < self.context.rec:
+                continue
+            if sendingPacket.retryAt >= currentTime:
+                self.context.sendBuffer.put(sendingPacket)
+                break
+            self.context.sendWindow.put(sendingPacket)
 
     def __send(self):
         while True:

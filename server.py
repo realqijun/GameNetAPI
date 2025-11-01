@@ -7,6 +7,7 @@ def main():
     sock.bind(('127.0.0.1', SERVER_PORT))
     sock.listen()
     sock.accept()
-
+    while True:
+        print(sock.recv().decode(encoding='utf-8'))
 
 main()
