@@ -1,6 +1,11 @@
+import queue
+import socket
+
 from api.gnscontext import GNSContext, SendingHUDPPacket, RecvingHUDPPacket
 from api.states.gnssclosewait import GNSStateCloseWait
+from api.states.gnssclosing import GNSStateClosing
 from api.states.gnssfinwait1 import GNSStateFinWait1
+from api.states.gnssfinwait2 import GNSStateFinWait2
 from api.states.gnssinitial import GNSStateInitial
 from api.states.gnssbound import GNSStateBound
 from api.states.gnsslastack import GNSStateLastAck
@@ -8,6 +13,8 @@ from api.states.gnsslisten import GNSStateListen
 from api.states.gnssaccept import GNSStateAccept
 from api.states.gnsssynsent import GNSStateSynSent
 from api.states.gnsstate import GNSState
+from api.states.gnssterminated import GNSStateTerminated
+from api.states.gnsstimewait import GNSStateTimeWait
 from common import AddrPort, IllegalStateChangeException, CLIENT_PORT
 from hudp import HUDPPacket
 from threading import Thread
@@ -93,7 +100,9 @@ class GameNetSocket:
         self.context.sendWindow.put(SendingHUDPPacket(syn))
 
         # Transition to a transient state
+        self.context.stateSemaphore.acquire()
         self.__transition(GNSStateSynSent())
+        self.context.stateSemaphore.release()
 
         # Start all threads to manage operations of the socket
         Thread(target=self.__recv).start()
@@ -128,10 +137,14 @@ class GameNetSocket:
         fin = HUDPPacket.create(self.context.seq, self.context.ack, bytes(), isReliable=True, isFin=True)
         self.context.seq += 1
         self.context.sendWindow.put(SendingHUDPPacket(fin))
+
+        # Semaphore is needed to prevent race-conditions from multiple threads trying to change states.
+        self.context.stateSemaphore.acquire()
         if isinstance(self.state, GNSStateCloseWait):
             self.__transition(GNSStateLastAck())
         else:
             self.__transition(GNSStateFinWait1())
+        self.context.stateSemaphore.release()
         self.context.closeSemaphore.acquire()
         return
 
@@ -141,10 +154,7 @@ class GameNetSocket:
         :param newState: The new state to be changed to.
         """
         print(type(newState))
-        # Semaphore is needed to prevent race-conditions from multiple threads trying to change states.
-        self.context.stateSemaphore.acquire()
         self.state = newState
-        self.context.stateSemaphore.release()
 
     def __routine(self):
         """
@@ -152,11 +162,16 @@ class GameNetSocket:
         This function is executed once every 10 milliseconds to ensure low latency.
         """
         while True:
+            # If state becomes TERMINATED, terminates this thread
+            if isinstance(self.state, GNSStateTerminated):
+                break
+            self.context.stateSemaphore.acquire()
             newState = self.state.process(self.context)
             # Repeatedly process packets until the state does not change anymore
             while type(self.state) is not type(newState):
                 self.__transition(newState)
                 newState = self.state.process(self.context)
+            self.context.stateSemaphore.release()
             # Put timed-out packets into 'sendWindow'
             self.__updateSendWindow()
             time.sleep(0.010)
@@ -185,28 +200,40 @@ class GameNetSocket:
         Sends all packets in 'sendWindow'. This function is executed in its own thread.
         """
         while True:
-            sendingPacket = self.context.sendWindow.get()
-            packetBytes = sendingPacket.packet.toBytes()
-            if self.context.destAddrPort:
-                self.context.sock.sendto(packetBytes, self.context.destAddrPort)
-            else:
-                raise RuntimeError("This branch is not supposed to be matched")
-            sendingPacket.decrementRetry()
-            # If there are still retries left, put it back into the buffer
-            if sendingPacket.retryLeft > 0:
-                self.context.sendBuffer.put(sendingPacket)
+            # If state becomes TERMINATED, terminates this thread
+            if isinstance(self.state, GNSStateTerminated):
+                break
+            try:
+                sendingPacket = self.context.sendWindow.get(timeout=0.200)
+                packetBytes = sendingPacket.packet.toBytes()
+                if self.context.destAddrPort:
+                    self.context.sock.sendto(packetBytes, self.context.destAddrPort)
+                else:
+                    raise RuntimeError("This branch is not supposed to be matched")
+                sendingPacket.decrementRetry()
+                # If there are still retries left, put it back into the buffer
+                if sendingPacket.retryLeft > 0:
+                    self.context.sendBuffer.put(sendingPacket)
+            except queue.Empty as e:
+                continue
 
     def __recv(self):
         """
         Receives packets in from socket. This function is executed in its own thread.
         """
         while True:
-            data, addrPort = self.context.sock.recvfrom(16384)
-            # Ensure packets pass checksum
-            if HUDPPacket.verifyChecksum(data):
-                # If connection is established and address does not match, drop it
-                if self.context.destAddrPort is not None and addrPort != self.context.destAddrPort:
-                    continue
-                packet = HUDPPacket.fromBytes(data)
-                self.context.receivedPacket = self.context.receivedPacket or packet.isDataPacket()
-                self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))
+            # If state becomes TERMINATED, terminates this thread
+            if isinstance(self.state, GNSStateTerminated):
+                break
+            try:
+                data, addrPort = self.context.sock.recvfrom(16384)
+                # Ensure packets pass checksum
+                if HUDPPacket.verifyChecksum(data):
+                    # If connection is established and address does not match, drop it
+                    if self.context.destAddrPort is not None and addrPort != self.context.destAddrPort:
+                        continue
+                    packet = HUDPPacket.fromBytes(data)
+                    self.context.receivedPacket = self.context.receivedPacket or packet.isDataPacket()
+                    self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))
+            except socket.timeout as e:
+                continue

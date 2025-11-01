@@ -78,8 +78,9 @@ class GNSContext:
     def __init__(self):
         self.sock: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         """
-        The underlying UDP packet.
+        The underlying UDP packet. Timeout time is 0.200 seconds.
         """
+        self.sock.settimeout(0.200)
 
         self.seq: int = random.randint(1, 10000)
         """
@@ -98,7 +99,7 @@ class GNSContext:
 
         self.sendWindow: Queue[SendingHUDPPacket] = Queue(maxsize=MAX_WINDOW_SIZE)
         """
-        Queue to store ready-to-send packets. 
+        Queue to store ready-to-send packets. Timeout is 0.200s.
         GameNetSocket will create a thread to continually retrieves packets from this queue and send it.
         """
 

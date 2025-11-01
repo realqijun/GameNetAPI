@@ -12,7 +12,7 @@ class GNSStateSynSent(GNSState):
 
     In this state, the socket (1) waits for the expected SYN ACK to come, send back the appropriate ACK
     and transition into ESTABLISHED, (2) waits for SYN packet from remote, notice the simultaneous open,
-    send back SYN ACK and transition into SYN_RCVD or (3) terminates if a RST packet arrives from remote.
+    send back SYN ACK and transition into SYN_RCVD or (3) transition to INITIAL if a RST packet arrives from remote.
 
     All other packets are dropped and ignored.
     """
@@ -30,9 +30,9 @@ class GNSStateSynSent(GNSState):
                 context.connectSemaphore.release()
                 return GNSStateEstablished()
             elif packet.isSyn():  # Simultaneous open
-                context.ack = packet.ack + 1
-                synAck = HUDPPacket.create(context.seq, context.ack, bytes(), isReliable=True, isSyn=True, isAck=True)
-                context.seq += 1
+                context.ack = packet.seq + 1
+                synAck = HUDPPacket.create(context.seq - 1, context.ack, bytes(), isReliable=True, isSyn=True,
+                                           isAck=True)
                 context.sendWindow.put(SendingHUDPPacket(synAck))
                 return GNSStateSynRcvd()
             elif packet.isRst() and packet.ack == context.seq:
