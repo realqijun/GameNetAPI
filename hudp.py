@@ -5,11 +5,12 @@ import time
 
 
 class HUDPFlags:
-    def __init__(self, isReliable: bool, isAck: bool, isSyn: bool, isFin: bool):
+    def __init__(self, isReliable: bool, isAck: bool, isSyn: bool, isFin: bool, isRst: bool):
         self.isReliable = isReliable
         self.isAck = isAck
         self.isSyn = isSyn
         self.isFin = isFin
+        self.isRst = isRst
 
     @classmethod
     def fromBytes(cls, data: bytes) -> HUDPFlags:
@@ -17,14 +18,15 @@ class HUDPFlags:
 
         integerValue = (data[0] << 8) + data[1]
         return HUDPFlags(
-            (integerValue & 0x0008) >> 3,
-            (integerValue & 0x0004) >> 2,
-            (integerValue & 0x0002) >> 1,
-            integerValue & 0x0001,
+            bool((integerValue & 0x0010) >> 4),
+            bool((integerValue & 0x0008) >> 3),
+            bool((integerValue & 0x0004) >> 2),
+            bool((integerValue & 0x0002) >> 1),
+            bool(integerValue & 0x0001),
         )
 
-    def toInteger(self) -> bytes:
-        return (self.isReliable << 3) + (self.isAck << 2) + (self.isSyn << 1) + self.isFin
+    def toInteger(self) -> int:
+        return (self.isReliable << 4) + (self.isAck << 3) + (self.isSyn << 2) + (self.isFin << 1) + self.isRst
 
     def toBytes(self) -> bytes:
         data = struct.pack("!H", self.toInteger())
@@ -39,7 +41,8 @@ class HUDPFlags:
             self.isReliable == other.isReliable and
             self.isAck == other.isAck and
             self.isSyn == other.isSyn and
-            self.isFin == other.isFin
+            self.isFin == other.isFin and
+            self.isRst == other.isRst
         )
 
     def __str__(self):
@@ -50,6 +53,8 @@ class HUDPFlags:
             string += "SYN "
         if self.isFin:
             string += "FIN "
+        if self.isRst:
+            string += "RST "
         return string
 
 
@@ -75,7 +80,7 @@ class HUDPPacket:
         return HUDPPacket.checksum1s(data) == 0
 
     @classmethod
-    def fromBytes(cls, data: bytes) -> (HUDPPacket, bytes):
+    def fromBytes(cls, data: bytes) -> HUDPPacket:
         assert (len(data) >= 20)
 
         flags = HUDPFlags.fromBytes(data[18:20])
@@ -87,12 +92,13 @@ class HUDPPacket:
             flags,
             data[20:]
         )
+
         return packet
 
     @classmethod
     def create(cls, seq: int, ack: int, content: bytes,
-               isReliable=False, isAck=False, isSyn=False, isFin=False) -> HUDPPacket:
-        flags = HUDPFlags(isReliable, isAck, isSyn, isFin)
+               isReliable=False, isAck=False, isSyn=False, isFin=False, isRst=False) -> HUDPPacket:
+        flags = HUDPFlags(isReliable, isAck, isSyn, isFin, isRst)
         currentTime = round(time.time() * 1000)
         packet = HUDPPacket(currentTime, seq, ack, 0, flags, content)
         packet.checksum = HUDPPacket.checksum1s(packet.toBytes())
@@ -102,6 +108,30 @@ class HUDPPacket:
         packet = struct.pack("!QIIH", self.time, self.seq, self.ack, self.checksum) + self.flags.toBytes() + self.content
         assert (len(packet) >= 20)
         return packet
+
+    def isSynAck(self) -> bool:
+        return self.flags.toInteger() == 0b0001_1100
+
+    def isSyn(self) -> bool:
+        return self.flags.toInteger() == 0b0001_0100
+
+    def isAck(self) -> bool:
+        return self.flags.toInteger() == 0b0001_1000
+
+    def isFin(self) -> bool:
+        return self.flags.toInteger() == 0b0001_0010
+
+    def isPureAck(self) -> bool:
+        return self.isAck() and len(self.content) == 0
+
+    def isRst(self) -> bool:
+        return self.flags.toInteger() == 0b0000_0001
+
+    def getAck(self) -> int:
+        return self.seq + len(self.content)
+
+    def isUnreliable(self) -> bool:
+        return not self.flags.isReliable
 
     def __eq__(self, other: HUDPPacket):
         if not isinstance(other, HUDPPacket):

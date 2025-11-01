@@ -10,18 +10,18 @@ def getCurrentTimeString() -> str:
     return f"[{timeString}]"
 
 
-def printDropped() -> str:
+def printDropped() -> None:
     return print("\033[41m DROPPED \033[0m", end='')
 
 
-def handleClientPacket(sock: socket.socket, data: bytes, dropRate: float) -> str:
+def handleClientPacket(sock: socket.socket, data: bytes, dropRate: float):
     if random.random() < dropRate:
         printDropped()
         return
     sock.sendto(data, ('127.0.0.1', SERVER_PORT))
 
 
-def handleServerPacket(sock: socket.socket, data: bytes, dropRate: float) -> str:
+def handleServerPacket(sock: socket.socket, data: bytes, dropRate: float):
     if random.random() < dropRate:
         printDropped()
         return
@@ -36,10 +36,10 @@ def main():
         packet = HUDPPacket.fromBytes(data)
         if address[1] == CLIENT_PORT:
             print(f"{getCurrentTimeString()} C -> S: {packet}", end='')
-            handleClientPacket(sock, data, 0.25)
+            handleClientPacket(sock, data, 0.5)
         elif address[1] == SERVER_PORT:
             print(f"{getCurrentTimeString()} S -> C: {packet}", end='')
-            handleServerPacket(sock, data, 0.25)
+            handleServerPacket(sock, data, 0.5)
         else:
             print("NOT SUPPOSED TO HAPPEN")
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
-from threading import Thread, Lock
-from protocol.hudp import HUDPPacket
+from threading import Semaphore
+from hudp import HUDPPacket
 from queue import Queue, PriorityQueue
 from common import AddrPort
 import socket
@@ -13,12 +13,12 @@ MAX_BUFFER_SIZE = 4096
 class SendingHUDPPacket:
     def __init__(self, packet: HUDPPacket):
         self.packet = packet
-        self.retryLeft = packet
+        self.retryLeft = 1 if packet.isUnreliable() else 15
         self.retryAt = time.time()
 
     def decrementRetry(self):
         self.retryLeft -= 1
-        self.retryAt = time.time()
+        self.retryAt = time.time() + 0.200
 
     def __lt__(self, other: SendingHUDPPacket):
         return self.retryAt < other.retryAt
@@ -48,4 +48,4 @@ class GNSContext:
         self.destAddrPort: AddrPort = None
         self.tempDestAddrPort: AddrPort = None
 
-        self.acceptQueue: Queue[AddrPort] = Queue(maxsize=1)
+        self.acceptSemaphore: Semaphore = Semaphore(0)

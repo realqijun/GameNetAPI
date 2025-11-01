@@ -1,14 +1,12 @@
-from api import GameNetAPI
+from api.gns import GameNetSocket
 from common import SERVER_PORT
 
 
 def main():
-    api = GameNetAPI()
-    api.bind('127.0.0.1', SERVER_PORT)
-    api.listen()
-    while True:
-        data = api.recv()
-        print(data.decode(encoding="utf-8"))
+    sock = GameNetSocket()
+    sock.bind(('127.0.0.1', SERVER_PORT))
+    sock.listen()
+    sock.accept()
 
 
 main()

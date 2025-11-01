@@ -1,48 +1,60 @@
-from gnscontext import GNSContext, SendingHUDPPacket
-from states.gnssclosed import GNSStateClosed
-from states.gnsslisten import GNSStateListen
-from states.gnsstate import GNSState
-from common import IllegalOperationException, AddrPort
-from protocol.hudp import HUDPPacket
-from threading import Thread, Lock, Semaphore
+from api.gnscontext import GNSContext, SendingHUDPPacket, RecvingHUDPPacket
+from api.states.gnssinitial import GNSStateInitial
+from api.states.gnssbinded import GNSStateBinded
+from api.states.gnsslisten import GNSStateListen
+from api.states.gnssaccept import GNSStateAccept
+from api.states.gnsssynsent import GNSStateSynSent
+from api.states.gnsstate import GNSState
+from common import AddrPort, IllegalStateChangeException, CLIENT_PORT
+from hudp import HUDPPacket
+from threading import Thread
 import time
 
 
 class GameNetSocket:
     def __init__(self):
-        self.state: GNSState = GNSStateClosed()
-        self.stateSemaphore: Semaphore = Semaphore(2)
+        self.state: GNSState = GNSStateInitial()
         self.context = GNSContext()
 
     def bind(self, addrPort: AddrPort):
-        self.ensureNotBinded()
-        self.ensureNotConnected()
-        self.context.bindAddrPort = addrPort
+        if not isinstance(self.state, GNSStateInitial):
+            raise IllegalStateChangeException("Can only bind() an INITIAL socket")
+        self.context.bindAddrPort = addrPort  # TODO: change this to sendAddrPort for more universal usage
         self.context.sock.bind(addrPort)
+        self.state = GNSStateBinded()
 
     def listen(self):
-        self.ensureBinded()
-        self.ensureNotConnected()
-        self.__transition(GNSStateListen())
-        recvRoutine = Thread(target=self.__recv)
-        recvRoutine.start()
+        if not isinstance(self.state, GNSStateBinded):
+            raise IllegalStateChangeException("Can only listen() on a BINDED socket")
+        Thread(target=self.__recv).start()
+        self.state = GNSStateListen()
 
     def accept(self):
-        self.ensureBinded()
-        self.ensureNotConnected()
-        routine = Thread(target=self.__routine)
-        routine.start()
-        sendRoutine = Thread(target=self.__send)
-        sendRoutine.start()
-        # Block until acceptQueue get filled from __routine
-        self.context.destAddrPort = self.context.acceptQueue.get()
+        if not isinstance(self.state, GNSStateListen):
+            raise IllegalStateChangeException("Can only accept() on a LISTEN socket")
+        self.state = GNSStateAccept()
+        Thread(target=self.__routine).start()
+        Thread(target=self.__send).start()
+        self.context.acceptSemaphore.acquire()
+        return
 
     def connect(self, addrPort: AddrPort):
-        self.ensureNotConnected()
-        # TODO: Accepting here
+        if not (isinstance(self.state, GNSStateInitial) or isinstance(self.state, GNSStateBinded)):
+            raise IllegalStateChangeException("Can only connect() on a INITIAL socket")
+
+        if isinstance(self.state, GNSStateInitial):
+            self.bind(('127.0.0.1', CLIENT_PORT))
+
+        self.context.destAddrPort = addrPort
+        syn = HUDPPacket.create(self.context.seq, 0, bytes(), isReliable=True, isSyn=True)
+        self.context.seq += 1
+        self.context.sendWindow.put(SendingHUDPPacket(syn))
+        self.state = GNSStateSynSent()
+        Thread(target=self.__recv).start()
+        Thread(target=self.__routine).start()
+        Thread(target=self.__send).start()
 
     def send(self, data: bytes, isReliable: bool):
-        self.ensureConnected()
         packet = HUDPPacket.create(self.context.seq, self.context.ack, data, isReliable=isReliable)
         if isReliable:
             packet.flags.isAck = True
@@ -50,20 +62,26 @@ class GameNetSocket:
         self.context.sendBuffer.put(SendingHUDPPacket(packet))
 
     def recv(self) -> bytes:
-        self.ensureConnected()
         data = self.context.clientRecvBuffer.get()
         return data
 
     def close(self):
-        self.ensureConnected()
+        pass
         # TODO: Transition to closing here
 
     def __routine(self):
         while True:
-            self.stateSemaphore.acquire()
-            newState = self.state.__routine(self.context)
-            self.stateSemaphore.release()
-            self.__transition(newState)
+            newState = self.state.process(self.context)
+            self.state = newState
+            currentTime = time.time()
+            while self.context.sendBuffer.qsize() > 0:
+                sendingPacket = self.context.sendBuffer.get()
+                if sendingPacket.packet.seq < self.context.rec:
+                    continue
+                if sendingPacket.retryAt >= currentTime:
+                    self.context.sendBuffer.put(sendingPacket)
+                    break
+                self.context.sendWindow.put(sendingPacket)
             time.sleep(0.010)
 
     def __send(self):
@@ -84,29 +102,4 @@ class GameNetSocket:
         while True:
             data, addrPort = self.context.sock.recvfrom(16384)
             if HUDPPacket.verifyChecksum(data):
-                self.stateSemaphore.acquire()
-                self.state.__recv(self.context, data, addrPort)
-                self.stateSemaphore.release()
-
-    def __transition(self, newState: GNSState):
-        self.stateSemaphore.acquire()
-        self.stateSemaphore.acquire()
-        self.state = newState
-        self.stateSemaphore.release()
-        self.stateSemaphore.release()
-
-    def ensureNotBinded(self):
-        if self.context.bindAddrPort is not None:
-            raise IllegalOperationException("Socket has already been binded")
-
-    def ensureBinded(self):
-        if self.context.bindAddrPort is None:
-            raise IllegalOperationException("Socket has not been binded")
-
-    def ensureNotConnected(self):
-        if self.context.bindAddrPort is not None:
-            raise IllegalOperationException("Socket is already connected")
-
-    def ensureConnected(self):
-        if self.context.bindAddrPort is None:
-            raise IllegalOperationException("Socket has not been connected")
+                self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))

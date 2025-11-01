@@ -1,18 +1,23 @@
-from gnsstate import GNSState
-from gnscontext import GNSContext
-from common import AddrPort
-from gnscontext import RecvingHUDPPacket
-from protocol.hudp import HUDPPacket
+from api.states.gnsstate import GNSState
+from api.states.gnssestablished import GNSStateEstablished
+from api.gnscontext import GNSContext
 
 
 class GNSStateSynRcvd(GNSState):
-    def __routine(self, context: GNSContext) -> GNSState:
-        recvingPacket = context.recvWindow.get()
-        context.acceptQueue.put(context.tempDestAddrPort)
-        context.ack = recvingPacket.packet.
-        return self
+    def process(self, context: GNSContext) -> GNSState:
+        recvLen = context.recvWindow.qsize()
+        for _ in range(recvLen):
+            recvingPacket = context.recvWindow.get()
+            packet = recvingPacket.packet
+            if packet.isAck() and packet.ack == context.seq:
+                context.rec = packet.ack
+                context.acceptSemaphore.release()
+                return GNSStateEstablished()
+            elif packet.isRst():
+                from api.states.gnssaccept import GNSStateAccept
+                return GNSStateAccept()
+            elif packet.isFin():
+                # TODO: Go to CLOSE_WAIT here
+                pass
 
-    def __recv(self, context: GNSContext, data: bytes, addrPort: AddrPort):
-        packet = HUDPPacket.fromBytes(data)
-        if packet.flags.isAck and packet.ack == context.seq + 1 and context.tempDestAddrPort == addrPort:
-            context.recvWindow.put(RecvingHUDPPacket(packet, addrPort))
+        return self
