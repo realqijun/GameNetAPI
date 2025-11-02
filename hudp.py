@@ -151,6 +151,13 @@ class HUDPPacket:
         packet.checksum = HUDPPacket.checksum1s(packet.toBytes())
         return packet
 
+    @classmethod
+    def createPureAck(cls, seq: int, ack: int) -> HUDPPacket:
+        """
+        Construct a Pure ACK packet, only meant for delivering ACK to remote.
+        """
+        return HUDPPacket.create(seq, ack, bytes(), isAck=True)
+
     def toBytes(self) -> bytes:
         """
         Convert the packet into its bytes' representation.

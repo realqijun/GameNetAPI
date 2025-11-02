@@ -27,7 +27,7 @@ class GNSStateAccept(GNSState):
                 context.ack = packet.seq + 1
                 context.destAddrPort = recvingPacket.addrPort
                 # Send back SYN ACK, completing the 2nd step in the 3-way handshake
-                synAck = HUDPPacket.create(context.seq, context.ack, bytes(), isReliable=True, isSyn=True, isAck=True)
+                synAck = HUDPPacket.create(context.seq, context.ack, isReliable=True, isSyn=True, isAck=True)
                 context.seq += 1
                 context.sendWindow.put(SendingHUDPPacket(synAck))
                 return GNSStateSynRcvd()

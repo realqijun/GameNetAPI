@@ -39,12 +39,10 @@ class GNSStateFinWait1(GNSState):
             recvingPacket = context.recvWindow.get()
             packet = recvingPacket.packet
             if packet.isSynAck() and packet.seq + 1 == context.ack:
-                ack = HUDPPacket.create(context.rec, context.ack, bytes(), isAck=True)
-                context.sendWindow.put(SendingHUDPPacket(ack))
+                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.rec, context.ack)))
             elif packet.isFin() and packet.seq == context.ack:  # Simultaneous close
                 context.ack = packet.seq + 1
-                ack = HUDPPacket.create(context.seq, context.ack, bytes(), isAck=True)
-                context.sendWindow.put(SendingHUDPPacket(ack))
+                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.seq, context.ack)))
                 return GNSStateClosing()
             elif packet.isRst() and packet.seq == context.ack:
                 return GNSStateTerminated()
@@ -67,13 +65,8 @@ class GNSStateFinWait1(GNSState):
                     context.rec = max(context.rec, packet.ack)
                     context.ack = packet.calculateAck()
                     self.timeOnCurrentAck = time.time()
+                    context.shouldSendAck = True
                     context.recvBuffer.put(packet.content)
-
-        # If ACK changed or a data packet was received, send back a pure ACK
-        if initialAck < context.ack or context.receivedPacket:
-            context.receivedPacket = False
-            ack = HUDPPacket.create(context.seq, context.ack, bytes(), isAck=True)
-            context.sendWindow.put(SendingHUDPPacket(ack))
 
         currentTime = time.time()
         # The socket has been stuck on this ACK for too long, skip ACK to the nearest next SEQ

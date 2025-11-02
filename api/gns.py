@@ -3,9 +3,7 @@ import socket
 
 from api.gnscontext import GNSContext, SendingHUDPPacket, RecvingHUDPPacket
 from api.states.gnssclosewait import GNSStateCloseWait
-from api.states.gnssclosing import GNSStateClosing
 from api.states.gnssfinwait1 import GNSStateFinWait1
-from api.states.gnssfinwait2 import GNSStateFinWait2
 from api.states.gnssinitial import GNSStateInitial
 from api.states.gnssbound import GNSStateBound
 from api.states.gnsslastack import GNSStateLastAck
@@ -14,7 +12,6 @@ from api.states.gnssaccept import GNSStateAccept
 from api.states.gnsssynsent import GNSStateSynSent
 from api.states.gnsstate import GNSState
 from api.states.gnssterminated import GNSStateTerminated
-from api.states.gnsstimewait import GNSStateTimeWait
 from common import AddrPort, IllegalStateChangeException, CLIENT_PORT
 from hudp import HUDPPacket
 from threading import Thread
@@ -95,7 +92,7 @@ class GameNetSocket:
 
         # Send the first SYN packet to initiate the 3-way handshake.
         self.context.destAddrPort = addrPort
-        syn = HUDPPacket.create(self.context.seq, 0, bytes(), isReliable=True, isSyn=True)
+        syn = HUDPPacket.create(self.context.seq, 0, isReliable=True, isSyn=True)
         self.context.seq += 1
         self.context.sendWindow.put(SendingHUDPPacket(syn))
 
@@ -134,7 +131,7 @@ class GameNetSocket:
         """
         Close the connection. A connection must be established before this.
         """
-        fin = HUDPPacket.create(self.context.seq, self.context.ack, bytes(), isReliable=True, isFin=True)
+        fin = HUDPPacket.create(self.context.seq, self.context.ack, isReliable=True, isFin=True)
         self.context.seq += 1
         self.context.sendWindow.put(SendingHUDPPacket(fin))
 
@@ -165,35 +162,38 @@ class GameNetSocket:
             # If state becomes TERMINATED, terminates this thread
             if isinstance(self.state, GNSStateTerminated):
                 break
+
+            # Repeatedly process packets until the state does not change anymore
             self.context.stateSemaphore.acquire()
             newState = self.state.process(self.context)
-            # Repeatedly process packets until the state does not change anymore
             while type(self.state) is not type(newState):
                 self.__transition(newState)
                 newState = self.state.process(self.context)
             self.context.stateSemaphore.release()
-            # Put timed-out packets into 'sendWindow'
-            self.__updateSendWindow()
-            time.sleep(0.010)
 
-    def __updateSendWindow(self):
-        """
-        Put all packets that are ready to be transmitted into 'sendWindow'
-        """
-        currentTime = time.time()
-        while self.context.sendBuffer.qsize() > 0:
-            sendingPacket = self.context.sendBuffer.get()
-            # If the sequence number of this packet has already been acknowledged by
-            # remote, there is no need to transmit it.
-            if sendingPacket.packet.seq < self.context.rec:
-                continue
-            # Only transmit packets that are ready.
-            if sendingPacket.retryAt >= currentTime:
-                self.context.sendBuffer.put(sendingPacket)
-                # If this packet is not ready, all packets after it are also not ready
-                # due to the ordering of the PriorityQueue
-                break
-            self.context.sendWindow.put(sendingPacket)
+            # Send back Pure ACK if needed
+            if self.context.shouldSendAck:
+                self.context.shouldSendAck = False
+                self.context.sendWindow.put(
+                    SendingHUDPPacket(HUDPPacket.createPureAck(self.context.seq, self.context.ack)))
+
+            # Put timed-out packets into 'sendWindow'
+            currentTime = time.time()
+            while self.context.sendBuffer.qsize() > 0:
+                sendingPacket = self.context.sendBuffer.get()
+                # If the sequence number of this packet has already been acknowledged by
+                # remote, there is no need to transmit it.
+                if sendingPacket.packet.seq < self.context.rec:
+                    continue
+                # Only transmit packets that are ready.
+                if sendingPacket.retryAt >= currentTime:
+                    self.context.sendBuffer.put(sendingPacket)
+                    # If this packet is not ready, all packets after it are also not ready
+                    # due to the ordering of the PriorityQueue
+                    break
+                self.context.sendWindow.put(sendingPacket)
+
+            time.sleep(0.010)
 
     def __send(self):
         """
@@ -233,7 +233,7 @@ class GameNetSocket:
                     if self.context.destAddrPort is not None and addrPort != self.context.destAddrPort:
                         continue
                     packet = HUDPPacket.fromBytes(data)
-                    self.context.receivedPacket = self.context.receivedPacket or packet.isDataPacket()
+                    self.context.shouldSendAck = self.context.shouldSendAck or packet.isDataPacket()
                     self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))
             except socket.timeout as e:
                 continue

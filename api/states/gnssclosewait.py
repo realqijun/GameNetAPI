@@ -23,8 +23,7 @@ class GNSStateCloseWait(GNSState):
             recvingPacket = context.recvWindow.get()
             packet = recvingPacket.packet
             if packet.isFin() and packet.seq + 1 == context.ack:
-                ack = HUDPPacket.create(context.seq, context.ack, bytes(), isAck=True)
-                context.sendWindow.put(SendingHUDPPacket(ack))
+                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.seq, context.ack)))
             elif packet.isPureAck():
                 context.rec = max(context.rec, packet.ack)
             elif packet.isRst():

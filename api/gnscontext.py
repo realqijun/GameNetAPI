@@ -134,7 +134,7 @@ class GNSContext:
         Address and port number of remote.
         """
 
-        self.receivedPacket: bool = False
+        self.shouldSendAck: bool = False
         """
         Whether a data packet was received. This is for deciding transmission of ACK packets, especially
         if the data packet received was out-of-order.

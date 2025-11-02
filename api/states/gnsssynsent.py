@@ -25,14 +25,12 @@ class GNSStateSynSent(GNSState):
             if packet.isSynAck() and packet.ack == context.seq:
                 context.ack = packet.seq + 1
                 context.rec = packet.ack
-                ack = HUDPPacket.create(context.seq, context.ack, bytes(), isAck=True)
-                context.sendWindow.put(SendingHUDPPacket(ack))
+                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.seq, context.ack)))
                 context.connectSemaphore.release()
                 return GNSStateEstablished()
             elif packet.isSyn():  # Simultaneous open
                 context.ack = packet.seq + 1
-                synAck = HUDPPacket.create(context.seq - 1, context.ack, bytes(), isReliable=True, isSyn=True,
-                                           isAck=True)
+                synAck = HUDPPacket.create(context.seq - 1, context.ack, isReliable=True, isSyn=True, isAck=True)
                 context.sendWindow.put(SendingHUDPPacket(synAck))
                 return GNSStateSynRcvd()
             elif packet.isRst() and packet.ack == context.seq:

@@ -7,8 +7,9 @@ class GNSStateSynRcvd(GNSState):
     """
     SYN_RCVD happens after the ACCEPT state, when SYN ACK packet has been sent to remote.
 
-    In this state, the socket (1) waits for the expected ACK or SYN ACK to come and transition
-    into ESTABLISHED or (2) transition back to ACCEPT if a RST packet arrives from remote.
+    In this state, the socket (1) waits for the expected ACK and transition into ESTABLISHED,
+    (2) waits for SYN ACK and transition into ESTABLISHED (simultaneous open)
+    or (3) transition back to ACCEPT if a RST packet arrives from remote.
 
     All other packets are dropped and ignored.
     """
@@ -20,6 +21,7 @@ class GNSStateSynRcvd(GNSState):
             packet = recvingPacket.packet
             if packet.isPureAck() and packet.ack == context.seq:
                 context.rec = packet.ack
+                # Both active or passive open can go here
                 context.acceptSemaphore.release()
                 context.connectSemaphore.release()
                 return GNSStateEstablished()
