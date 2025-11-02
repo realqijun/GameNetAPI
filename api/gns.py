@@ -116,7 +116,9 @@ class GameNetSocket:
         :return:
         """
         packet = HUDPPacket.create(self.context.seq, self.context.ack, data, isReliable=isReliable, isAck=isReliable)
-        self.context.seq += len(data)
+        # Only increment sequence number if packet is reliable
+        if not packet.isUnreliable():
+            self.context.seq += len(data)
         self.context.sendWindow.put(SendingHUDPPacket(packet))
 
     def recv(self) -> bytes:
