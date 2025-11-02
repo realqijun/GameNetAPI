@@ -13,6 +13,8 @@ class GNSStateClosing(GNSState):
     from remote before the expected ACK.
 
     In this state, the socket waits for the expected ACK to come and transition into TIME_WAIT.
+    We must still handle all other data packets and ACKs here as some packets from remote may be
+    lost and are re-transmitted.
 
     All other packets are dropped and ignored.
     """
