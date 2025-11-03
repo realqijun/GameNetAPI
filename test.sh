@@ -50,13 +50,13 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Starting server..."
-python3 "${TEST_DIR}test_server.py" &
+python3 -m tests.test_server &
 SERVER_PID=$!
 
 sleep 1
 
 echo "Running client..."
-python3 "${TEST_DIR}test_client.py"
+python3 -m tests.test_client
 CLIENT_EXIT_CODE=$? # Capture the client's exit code
 
 echo "Cleaning up server..."
