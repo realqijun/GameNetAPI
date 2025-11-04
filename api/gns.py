@@ -78,17 +78,19 @@ class GameNetSocket:
 
     def connect(self, addrPort: AddrPort):
         """
-        Attempts to connect to an address and port number.
-        The socket must not be used in any ways before this.
-        Return after connection with a remote is established.
+        Attempts to connect to an address and port number. The socket must be bound before this.
         """
-        if not (isinstance(self.state, GNSStateInitial) or isinstance(self.state, GNSStateBound)):
-            raise IllegalStateChangeException("Can only connect() on a INITIAL socket")
 
-        # Bind the socket to a specific address and port number.
-        # This is the only difference from TCP.
-        if isinstance(self.state, GNSStateInitial):
-            self.bind(('127.0.0.1', CLIENT_PORT))
+        """
+        This is the only function that behaves differently compared to the TCP socket.
+        This comes from the limitation of implementing TCP on UDP. UDP is connectionless,
+        so its sendto() function may send from different ports across different calls,
+        which will not work for our reliable transmission. Thus, the sacrifice must be
+        made to bind the socket to a port first, before calling connect().
+        """
+
+        if not isinstance(self.state, GNSStateBound):
+            raise IllegalStateChangeException("Can only connect() on a BOUND socket")
 
         # Send the first SYN packet to initiate the 3-way handshake.
         self.context.destAddrPort = addrPort

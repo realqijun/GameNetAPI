@@ -167,6 +167,12 @@ class HUDPPacket:
         assert (len(packet) >= 20)
         return packet
 
+    def isReliable(self) -> bool:
+        """
+        Return True if packet is reliable. False otherwise.
+        """
+        return self.flags.isReliable
+
     def isSynAck(self) -> bool:
         """
         SYN ACK packets in the 3-way handshake have the reliable, syn and ack flags set
