@@ -21,16 +21,16 @@ add_rule() {
     if [ "$CONDITION" == "low_loss" ]; then
         # Condition 1: Low Loss/Low Latency
         # - Delay: 50ms average, +/- 5ms jitter
-        # - Loss: 1%
+        # - Loss: 5%
         echo "Applying: Delay=50ms (5ms jitter), Loss=1%"
-        sudo tc qdisc add dev "$IFACE" root netem delay 50ms 5ms distribution normal loss 1%
+        sudo tc qdisc add dev "$IFACE" root netem delay 50ms 5ms distribution normal loss 5%
 
     elif [ "$CONDITION" == "high_loss" ]; then
         # Condition 2: High Loss/High Latency
         # - Delay: 100ms average, +/- 20ms jitter
-        # - Loss: 12%
+        # - Loss: 25%
         echo "Applying: Delay=100ms (20ms jitter), Loss=12%"
-        sudo tc qdisc add dev "$IFACE" root netem delay 100ms 20ms distribution normal loss 12%
+        sudo tc qdisc add dev "$IFACE" root netem delay 100ms 20ms distribution normal loss 25%
         
     elif [ "$CONDITION" == "cleanup" ]; then
         echo "Removing all tc-netem rules from $IFACE..."
