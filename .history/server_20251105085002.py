@@ -1,7 +1,6 @@
 from api.gns import GameNetSocket
 from common import SERVER_PORT, FORWARDER_PORT
 from datetime import datetime
-from hudp import HUDPPacket
 import time
 
 class PacketStats:
