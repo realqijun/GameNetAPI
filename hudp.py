@@ -108,11 +108,12 @@ class HUDPPacket:
         """
         Helper method for calculating 1s complement checksum
         """
-        sum: int = 0
+        sum16: int = 0
         for i in range(len(data) // 2):
-            sum += (data[2 * i] << 8) + data[2 * i + 1]
-        sum = (sum & 0xFFFF) + (sum >> 16)
-        return 0xFFFF - sum
+            sum16 += (data[2 * i] << 8) + data[2 * i + 1]
+        while (sum16 >> 16) > 0:
+            sum16 = (sum16 & 0xFFFF) + (sum16 >> 16)
+        return 0xFFFF - sum16
 
     @staticmethod
     def verifyChecksum(data: bytes) -> bool:
