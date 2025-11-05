@@ -2,10 +2,9 @@ from __future__ import annotations
 from threading import Semaphore
 from hudp import HUDPPacket
 from queue import Queue, PriorityQueue
-from common import AddrPort
+from common import AddrPort, RETRY_INCREMENT
 import socket
 import time
-import random
 
 MAX_WINDOW_SIZE = 4096
 MAX_BUFFER_SIZE = 4096
@@ -38,7 +37,7 @@ class SendingHUDPPacket:
         """
 
         self.retryLeft -= 1
-        self.retryAt = time.time() + 0.200
+        self.retryAt = time.time() + RETRY_INCREMENT
 
     def __lt__(self, other: SendingHUDPPacket):
         """
@@ -66,8 +65,13 @@ class RecvingHUDPPacket:
     def __lt__(self, other: RecvingHUDPPacket):
         """
         Provide the ordering for the PriorityQueue.
+        Unreliable packets will be ordered first, followed by reliable packets.
+        Inside each packet type, the one with the smallest sequence number is ordered first.
         """
-        return self.packet.seq < other.packet.seq
+
+        if self.packet.flags.isReliable == other.packet.flags.isReliable:
+            return self.packet.seq < other.packet.seq
+        return self.packet.flags.isReliable < other.packet.flags.isReliable
 
 
 class GNSContext:
@@ -82,7 +86,7 @@ class GNSContext:
         """
         self.sock.settimeout(0.200)
 
-        self.seq: int = random.randint(1, 10000)
+        self.seq: int = 0
         """
         Sequence Number of the next packet to be sent. Initially random to simulate actual TCP behaviour.
         """

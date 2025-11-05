@@ -244,8 +244,7 @@ class HUDPPacket:
         timeString = time.strftime("%M:%S:%f")[:-3]
         return (
             f"[{timeString}] SEQ: {self.seq:>5} ACK: "
-            f'{self.ack:>5} Flags: {self.flags} {"DATA" if self.isDataPacket() else ""}'
-            f"{self.ack:>5} Flags: {self.flags} {'DATA' if self.isDataPacket() else ''}"
+            f'{self.ack:>5} Flags: {self.flags} {"DATA" if self.isDataPacket() else ""}"
         )
 
     def __lt__(self, other: HUDPPacket):
