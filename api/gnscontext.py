@@ -8,6 +8,7 @@ import time
 
 MAX_WINDOW_SIZE = 4096
 MAX_BUFFER_SIZE = 4096
+MAX_RETRY = 15
 
 
 class SendingHUDPPacket:
@@ -21,7 +22,7 @@ class SendingHUDPPacket:
         The HUDP packet itself.
         """
 
-        self.retryLeft = 1 if packet.isUnreliable() else 15
+        self.retryLeft = 1 if packet.isUnreliable() else MAX_RETRY
         """
         Number of retries remaining for this packet. Initially 1 for unreliable packets and 15 for reliable ones.
         """
@@ -109,7 +110,7 @@ class GNSContext:
 
         self.sendBuffer: PriorityQueue[SendingHUDPPacket] = PriorityQueue(maxsize=MAX_BUFFER_SIZE)
         """
-        PriorityQueue to store packets that are not ready to be sent, i.e. waiting for timeout. 
+        PriorityQueue to store packets that are not ready to be sent, i.e. waiting for timeout.
         The Queue is ordered from closest to furthest away from timing out (e.g. a packet
         that times out in 100ms is in front of a packet that times out in 200ms).
         GameNetSocket has a routine to check when packets times out and put them into 'sendWindow'.
@@ -126,7 +127,7 @@ class GNSContext:
 
         self.recvBuffer: Queue[bytes] = Queue(maxsize=MAX_BUFFER_SIZE)
         """
-        Queue to store packets' data that are ready to be received by the client. 
+        Queue to store packets' data that are ready to be received by the client.
         """
 
         self.sendAddrPort: AddrPort = None

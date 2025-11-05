@@ -5,13 +5,14 @@ GameNetAPI is a custom transport layer protocol built over a single UDP socket t
 
 ## Protocol and RDT Details
 Packet Header Format
-All H-UDP packets share a 7-byte header:
-| Field Name | Size (Bits) | Description |
+All H-UDP packets share a 20-byte header:
+| Field Name | Size (Bytes) | Description |
 | ---------- | ------------ | ----------- |
-| ChannelType | 1 | 0 = Data (Reliable), 1 = Data (Unreliable), 2 = ACK | 
-| SeqNo | 32 | Packet sequence number (for reliable channel and ACKs) |
-| Timestamp | 64 | Sender's time of transmission (milliseconds) |
-| Checksum | 16 | 1's complement checksum of the header with checksum field set to 0 |
+| Timestamp | 8 | Time in milliseconds when the packet was created. |
+| SeqNo | 4 | Packet sequence number (for unreliable channel, the seqno is always -1) |
+| AckNo | 4 | Packet ACK number (for reliable channel) |
+| Checksum | 2 | 1's complement checksum of the header with checksum field set to 0 |
+| Packet flags | 2 | First bit is used for packet reliability, other bits are used set what type of packet it is (e.g. FIN, ACK, SYN, RST) |
 | Payload | Variable | Application data |
 
 Reliable Channel Logic
@@ -21,4 +22,4 @@ Reliable Channel Logic
 
 ## Setup and Execution
 Prerequisites
-1. Python 3.9 and above
+1. Python 3.10 and above
