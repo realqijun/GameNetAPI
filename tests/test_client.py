@@ -6,12 +6,10 @@ from api.gns import GameNetSocket
 SERVER_ADDR = ('127.0.0.1', 6767)
 CLIENT_ADDR = ('127.0.0.1', 4896)
 
-def test_data_integrity(sock: GameNetSocket):
+def test_data_integrity(sock: GameNetSocket, test_data: bytes):
     print("--- 1. Running Data Integrity Test ---")
     sock.send(b'TEST_INTEGRITY', True)
 
-    # Generate 256B of test data
-    test_data = os.urandom(256)
     chunk_size = 1400
 
     print(f"Sending {len(test_data)} bytes in {len(test_data)//chunk_size} chunks...")
@@ -139,12 +137,15 @@ def run_client():
     sock.bind(CLIENT_ADDR)
     print(f"[Client] Connecting to {SERVER_ADDR}...")
 
+    with open('tests/test_cases/1.txt', 'rb') as f:
+        test_data = f.read()
+
     try:
         sock.connect(SERVER_ADDR)
         print("[Client] Connected to server.")
 
         # --- Run all tests ---
-        test_data_integrity(sock)
+        test_data_integrity(sock, test_data)
         test_rtt(sock)
         test_throughput(sock)
         test_unreliable(sock)

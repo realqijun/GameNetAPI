@@ -18,7 +18,7 @@ def run_server():
             cmd_data = server.recv()
             if not cmd_data:
                 break
-            
+
             command = cmd_data.decode('utf-8')
             print(f"[Server] Received command: {command}")
 
