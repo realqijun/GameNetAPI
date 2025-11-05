@@ -107,13 +107,14 @@ def test_throughput(sock: GameNetSocket):
 def test_unreliable(sock: GameNetSocket):
     print("--- 4. Running Unreliable Send Test ---")
     sock.send(b'TEST_UNRELIABLE', True)
+    time.sleep(0.5)
 
     total_to_send = 1000
     print(f"Sending {total_to_send} unreliable packets...")
 
     for _ in range(total_to_send):
-        sock.send(b'UNRELIABLE_PING', False) # isReliable=False
-        time.sleep(0.001) # 1ms gap
+        sock.send(b'UNRELIABLE_PING', False)
+        time.sleep(0.001)
 
     print("All packets sent. Waiting for server count...")
 
