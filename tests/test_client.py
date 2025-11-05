@@ -36,7 +36,6 @@ def test_data_integrity(sock: GameNetSocket):
     print(f"Total Sent:     {len(sent_data)} bytes")
     print(f"Total Received: {len(received_data)} bytes")
 
-    # THE ACTUAL TEST
     assert sent_data == received_data, "Data mismatch!"
     assert len(sent_data) == len(test_data), "Sent data length mismatch!"
     assert len(received_data) == len(test_data), "Received data length mismatch!"
@@ -44,9 +43,6 @@ def test_data_integrity(sock: GameNetSocket):
     print("--- Data Integrity Test: PASSED ---")
 
 def test_rtt(sock: GameNetSocket):
-    """
-    Sends 20 'ping' packets and measures the min/avg/max RTT.
-    """
     print("--- 2. Running RTT Test ---")
     sock.send(b'TEST_RTT', True)
 
@@ -60,7 +56,7 @@ def test_rtt(sock: GameNetSocket):
         end_time = time.monotonic()
 
         if data == b'PING':
-            rtt = (end_time - start_time) * 1000 # in ms
+            rtt = (end_time - start_time) * 1000
             rtt_list.append(rtt)
             print(f"Ping {i+1}/20: RTT = {rtt:.2f} ms")
         else:
@@ -81,9 +77,6 @@ def test_rtt(sock: GameNetSocket):
     print("--- RTT Test: COMPLETED ---")
 
 def test_throughput(sock: GameNetSocket):
-    """
-    Blasts 5MB of data and measures time to calculate throughput.
-    """
     print("--- 3. Running Throughput Test ---")
     sock.send(b'TEST_THROUGHPUT', True)
 
@@ -114,9 +107,6 @@ def test_throughput(sock: GameNetSocket):
     print("--- Throughput Test: COMPLETED ---")
 
 def test_unreliable(sock: GameNetSocket):
-    """
-    Sends 1000 unreliable packets and asks server how many it got.
-    """
     print("--- 4. Running Unreliable Send Test ---")
     sock.send(b'TEST_UNRELIABLE', True)
 
@@ -166,8 +156,8 @@ def run_client():
     except Exception as e:
         print(f"\n--- TEST FAILED ---", file=sys.stderr)
         print(f"Error: {e}", file=sys.stderr)
-        sock.close() # Force close
-        sys.exit(1) # Exit with error code to fail the shell script
+        sock.close()
+        sys.exit(1)
 
     finally:
         sock.close()
