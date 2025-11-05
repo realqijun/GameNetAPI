@@ -88,9 +88,9 @@ class GNSLogger:
             if packet in self.sendRecord:
                 message += "retransmit "
             else:
-                self.sendRecord[packet] = time.time()
+                self.sendRecord[packet] = packet.time
                 if packet.seq not in self.sendSeqRecord:
-                    self.sendSeqRecord[packet.seq] = time.time()
+                    self.sendSeqRecord[packet.seq] = packet.time
 
         if self.enableLogSend:
             self.log(message)
@@ -101,7 +101,7 @@ class GNSLogger:
             if packet in self.recvRecord:
                 message += "duplicate "
             else:
-                self.recvRecord[packet] = time.time()
+                self.recvRecord[packet] = packet.time
 
         if self.enableLogRecv:
             self.log(message)
