@@ -9,7 +9,7 @@ ACK_TIMEOUT = 0.200
 How long does it take to skip the current ACK if the socket is stuck there
 """
 
-RETRY_INCREMENT = 0.050
+RETRY_INCREMENT = 0.020
 """
 The time offset to retransmit this packet
 """

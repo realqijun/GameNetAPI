@@ -13,7 +13,7 @@ from api.states.gnssaccept import GNSStateAccept
 from api.states.gnsssynsent import GNSStateSynSent
 from api.states.gnsstate import GNSState
 from api.states.gnssterminated import GNSStateTerminated
-from common import AddrPort, IllegalStateChangeException
+from common import AddrPort, IllegalStateChangeException, RETRY_INCREMENT
 from hudp import HUDPPacket
 from threading import Thread
 import time
@@ -196,26 +196,10 @@ class GameNetSocket:
             # Send back Pure ACK if needed
             if self.context.shouldSendAck:
                 self.context.shouldSendAck = False
-                self.context.sendWindow.put(
+                self.context.sendBuffer.put(
                     SendingHUDPPacket(HUDPPacket.createPureAck(self.context.seq, self.context.ack)))
 
-            # Put timed-out packets into 'sendWindow'
-            currentTime = time.time()
-            while self.context.sendBuffer.qsize() > 0 and not self.context.sendWindow.full():
-                sendingPacket = self.context.sendBuffer.get()
-                # If the sequence number of this packet has already been acknowledged by
-                # remote, there is no need to transmit it.
-                if sendingPacket.packet.seq < self.context.rec:
-                    continue
-                # Only transmit packets that are ready.
-                if sendingPacket.retryAt >= currentTime:
-                    self.context.sendBuffer.put(sendingPacket)
-                    # If this packet is not ready, all packets after it are also not ready
-                    # due to the ordering of the PriorityQueue
-                    break
-                self.context.sendWindow.put(sendingPacket)
-
-            time.sleep(0.005)
+            time.sleep(0.001)
 
     def __send(self):
         """
@@ -225,20 +209,34 @@ class GameNetSocket:
             # If state becomes TERMINATED, terminates this thread
             if isinstance(self.state, GNSStateTerminated):
                 break
-            try:
-                sendingPacket = self.context.sendWindow.get(timeout=0.200)
+
+            # Put queued packets into 'sendWindow'
+            while self.context.sendBuffer.qsize() > 0 and not self.context.sendWindow.full():
+                sendingPacket = self.context.sendBuffer.get()
+                packet = sendingPacket.packet
+                if packet.isUnreliable():
+                    pass
+                # If this packet has already been sent and ACKed by remote
+                elif sendingPacket.retryLeft < 15 and sendingPacket.packet.seq < self.context.rec:
+                    continue
+
+                self.context.sendWindow.put(sendingPacket)
+
+            sendWindowLen = self.context.sendWindow.qsize()
+            for _ in range(sendWindowLen):
+                sendingPacket = self.context.sendWindow.get()
                 self.logger.logSend(sendingPacket)
                 packetBytes = sendingPacket.packet.toBytes()
                 if self.context.destAddrPort:
                     self.context.sock.sendto(packetBytes, self.context.destAddrPort)
                 else:
                     raise RuntimeError("This branch is not supposed to be matched")
-                sendingPacket.decrementRetry()
+                sendingPacket.retryLeft -= 1
                 # If there are still retries left, put it back into the buffer
                 if sendingPacket.retryLeft > 0:
                     self.context.sendBuffer.put(sendingPacket)
-            except queue.Empty:
-                continue
+
+            time.sleep(RETRY_INCREMENT)
 
     def __recv(self):
         """

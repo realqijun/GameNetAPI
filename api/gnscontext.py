@@ -6,8 +6,7 @@ from common import AddrPort, RETRY_INCREMENT
 import socket
 import time
 
-MAX_WINDOW_SIZE = 16
-MAX_BUFFER_SIZE = 16
+MAX_WINDOW_SIZE = 128
 MAX_RETRY = 15
 
 
@@ -44,7 +43,7 @@ class SendingHUDPPacket:
         """
         Provide the ordering for the PriorityQueue.
         """
-        return self.retryAt < other.retryAt
+        return self.packet.seq < other.packet.seq
 
 
 class RecvingHUDPPacket:
@@ -108,7 +107,7 @@ class GNSContext:
         GameNetSocket will create a thread to continually retrieves packets from this queue and send it.
         """
 
-        self.sendBuffer: PriorityQueue[SendingHUDPPacket] = PriorityQueue(maxsize=MAX_BUFFER_SIZE)
+        self.sendBuffer: PriorityQueue[SendingHUDPPacket] = PriorityQueue()
         """
         PriorityQueue to store packets that are not ready to be sent, i.e. waiting for timeout.
         The Queue is ordered from closest to furthest away from timing out (e.g. a packet
@@ -125,7 +124,7 @@ class GNSContext:
         Provides the buffering needed for packet reordering.
         """
 
-        self.recvBuffer: Queue[bytes] = Queue(maxsize=MAX_BUFFER_SIZE)
+        self.recvBuffer: Queue[bytes] = Queue()
         """
         Queue to store packets' data that are ready to be received by the client.
         """

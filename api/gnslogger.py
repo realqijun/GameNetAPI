@@ -2,35 +2,63 @@ from api.gnscontext import SendingHUDPPacket
 from hudp import HUDPPacket
 from typing import Dict, List, Deque, Tuple
 from datetime import datetime
-from statistics import mean
 import time
 
 
-WINDOW = 0.500
+class Metrics:
+    def __init__(self):
+        self.latencies: Deque[Tuple[float, int]] = Deque()
+        self.totalLatencies = 0
+        self.jitters: Deque[Tuple[float, int]] = Deque()
+        self.totalJitters = 0
+        self.dataSizes: Deque[Tuple[float, int]] = Deque()
+        self.totalDataSizes = 0
+
+    def updateMetrics(self, packet: HUDPPacket):
+        currentTime = time.time()
+
+        latency = currentTime - packet.time
+        self.totalLatencies += latency
+        self.latencies.append((currentTime, latency))
+        if len(self.latencies) > 0:
+            jitter = abs(latency - self.latencies[-1][1])
+            self.totalJitters += jitter
+            self.jitters.append((currentTime, jitter))
+        self.totalDataSizes += len(packet.content)
+        self.dataSizes.append((currentTime, len(packet.content)))
+
+    def __str__(self):
+        return (
+            f"Average Latency: {round(self.totalLatencies / len(self.latencies) * 1000)} ms | "
+            f"Jitter: {round(self.totalJitters / len(self.jitters) * 1000)} ms | "
+            f"Throughput: {round(self.totalDataSizes / (self.dataSizes[-1][0] - self.dataSizes[0][0]))} Bps"
+        )
 
 
 class GNSLogger:
     def __init__(self, logSend=True, logRecv=True, logMetrics=True):
-        self.sendRecord: Dict[int, float] = {}
+        self.sendRecord: Dict[HUDPPacket, float] = {}
         """
         Tracks all packet that has been sent.
-        Maps the SEQ of the packet to the timestamp when it was first sent.
+        Maps the packet to the timestamp when it was first sent.
         """
 
-        self.recvRecord: Dict[int, float] = {}
+        self.sendSeqRecord: Dict[int, float] = {}
+        """
+        Tracks all packet that has been sent.
+        Maps the packet SEQ to the timestamp when it was first sent.
+        """
+
+        self.recvRecord: Dict[HUDPPacket, float] = {}
         """
         Tracks all valid packet that has been received.
-        Maps the SEQ of the packet to the timestamp when it was first received.
+        Maps the packet to the timestamp when it was first received.
         """
 
-        self.latencies: Deque[Tuple[float, int]] = []
-        self.totalLatencies = 0
-        self.jitters: Deque[Tuple[float, int]] = []
-        self.totalJitters = 0
-        self.dataSizes: Deque[Tuple[float, int]] = []
-        self.totalDataSizes = 0
-
         self.lastAck: int = 0
+
+        self.unreliableMetrics = Metrics()
+        self.reliableMetrics = Metrics()
 
         self.enableLogSend = logSend
         self.enableLogRecv = logRecv
@@ -57,10 +85,12 @@ class GNSLogger:
         packet = sendingPacket.packet
         message = f"\033[42m SEND \033[0m {packet} "
         if not packet.isUnreliable():
-            if packet.seq in self.sendRecord:
+            if packet in self.sendRecord:
                 message += "retransmit "
             else:
-                self.sendRecord[packet.seq] = packet.time
+                self.sendRecord[packet] = time.time()
+                if packet.seq not in self.sendSeqRecord:
+                    self.sendSeqRecord[packet.seq] = time.time()
 
         if self.enableLogSend:
             self.log(message)
@@ -68,46 +98,25 @@ class GNSLogger:
     def logRecv(self, packet: HUDPPacket):
         message = f"\033[44m RECV \033[0m {packet} "
         if not packet.isUnreliable():
-            if packet.seq in self.recvRecord:
+            if packet in self.recvRecord:
                 message += "duplicate "
             else:
-                self.recvRecord[packet.seq] = packet.time
+                self.recvRecord[packet] = time.time()
 
         if self.enableLogRecv:
             self.log(message)
 
         if packet.flags.isAck and packet.ack > self.lastAck:
-            rtt = round((packet.time - self.sendRecord[self.lastAck]) * 1000)
+            rtt = round((packet.time - self.sendSeqRecord[self.lastAck]) * 1000)
             if self.enableLogMetrics:
                 self.logInfo(f"SEQ {self.lastAck} -> {packet.ack}: RTT ≈ {rtt} ms")
             self.lastAck = packet.ack
 
-        currentTime = time.time()
-        latency = currentTime - packet.time
-        self.totalLatencies += latency
-        self.latencies.append((currentTime, latency))
-        if len(self.latencies) > 0:
-            jitter = abs(latency - self.jitters[-1])
-            self.totalJitters += jitter
-            self.jitters.append((currentTime, jitter))
-        self.totalDataSizes += len(packet.content)
-        self.dataSizes.append((currentTime, len(packet.content)))
+        if packet.isUnreliable():
+            self.unreliableMetrics.updateMetrics(packet)
+        else:
+            self.reliableMetrics.updateMetrics(packet)
 
-        self.__updateRunningMetrics()
-
-    def __updateRunningMetrics(self):
-        currentTime = time.time()
-        while self.latencies[0] < currentTime - WINDOW:
-            self.totalLatencies -= self.latencies.popleft()[1]
-        while self.jitters[0] < currentTime - WINDOW:
-            self.totalJitters -= self.jitters.popleft()[1]
-        while self.dataSizes[0] < currentTime - WINDOW:
-            self.totalDataSizes -= self.dataSizes.popleft()[1]
-
-    def __printRunningMetrics(self):
-        self.printInfo((
-            f"Past {WINDOW} seconds, "
-            f"Average Latency: {self.totalLatencies / len(self.latencies)} | "
-            f"Jitter: {self.totalJitters / len(self.totalJitters)} | "
-            f"Throughput: {self.totalDataSizes}"
-        ))
+    def logMetrics(self):
+        self.logInfo(f"{self.unreliableMetrics}")
+        self.logInfo(f"{self.reliableMetrics}")
