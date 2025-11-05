@@ -31,18 +31,18 @@ add_rule() {
         # - Loss: 25%
         echo "Applying: Delay=100ms (20ms jitter), Loss=12%"
         sudo tc qdisc add dev "$IFACE" root netem delay 100ms 20ms distribution normal loss 25%
-        
+
     elif [ "$CONDITION" == "cleanup" ]; then
         echo "Removing all tc-netem rules from $IFACE..."
         # Deleting the root rule removes all child rules
         sudo tc qdisc del dev "$IFACE" root 2> /dev/null
         echo "Cleanup complete."
-        
+
     else
         echo "ERROR: Invalid condition argument. Use 'low_loss', 'high_loss', or 'cleanup'."
         exit 1
     fi
-    
+
     # Verify configuration (optional)
     if [ "$CONDITION" != "cleanup" ]; then
         echo "Current configuration:"

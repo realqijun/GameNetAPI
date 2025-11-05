@@ -32,7 +32,7 @@ def run_server():
                         break
                     server.send(data, True) # Echo back reliably
                 print("[Server] Finished: TEST_INTEGRITY")
-                
+
             elif command == "TEST_RTT":
                 # Echo pings
                 print("[Server] Running: TEST_RTT")
@@ -57,7 +57,7 @@ def run_server():
                 count = 0
                 total = 1000 # Client will send 1000
                 server.context.sock.settimeout(2.0) # Set 2 sec timeout
-                
+
                 try:
                     for _ in range(total):
                         data = server.recv()
@@ -66,14 +66,14 @@ def run_server():
                 except Exception as e:
                     # This is expected, client stops sending
                     print(f"[Server] Timeout waiting for unreliable packets.")
-                
+
                 server.context.sock.settimeout(None) # Clear timeout
-                
+
                 # Send the result back reliably
                 result_msg = f"COUNT:{count}".encode('utf-8')
                 server.send(result_msg, True)
                 print(f"[Server] Finished: TEST_UNRELIABLE (Counted {count})")
-            
+
             elif command == "CLOSE":
                 print("[Server] Client requested close.")
                 break
