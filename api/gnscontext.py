@@ -6,8 +6,8 @@ from common import AddrPort, RETRY_INCREMENT
 import socket
 import time
 
-MAX_WINDOW_SIZE = 4096
-MAX_BUFFER_SIZE = 4096
+MAX_WINDOW_SIZE = 16
+MAX_BUFFER_SIZE = 16
 MAX_RETRY = 15
 
 

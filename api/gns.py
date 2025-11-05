@@ -2,6 +2,7 @@ import queue
 import socket
 
 from api.gnscontext import GNSContext, SendingHUDPPacket, RecvingHUDPPacket
+from api.gnslogger import GNSLogger
 from api.states.gnssclosewait import GNSStateCloseWait
 from api.states.gnssfinwait1 import GNSStateFinWait1
 from api.states.gnssinitial import GNSStateInitial
@@ -12,7 +13,7 @@ from api.states.gnssaccept import GNSStateAccept
 from api.states.gnsssynsent import GNSStateSynSent
 from api.states.gnsstate import GNSState
 from api.states.gnssterminated import GNSStateTerminated
-from common import AddrPort, IllegalStateChangeException, CLIENT_PORT
+from common import AddrPort, IllegalStateChangeException
 from hudp import HUDPPacket
 from threading import Thread
 import time
@@ -39,6 +40,11 @@ class GameNetSocket:
         self.state: GNSState = GNSStateInitial()
         """
         Current state of the socket.
+        """
+
+        self.logger: GNSLogger = GNSLogger()
+        """
+        Logging utility for the socket.
         """
 
     def bind(self, addrPort: AddrPort):
@@ -96,7 +102,7 @@ class GameNetSocket:
         self.context.destAddrPort = addrPort
         syn = HUDPPacket.create(self.context.seq, 0, isReliable=True, isSyn=True)
         self.context.seq += 1
-        self.context.sendWindow.put(SendingHUDPPacket(syn))
+        self.context.sendBuffer.put(SendingHUDPPacket(syn))
 
         # Transition to a transient state
         self.context.stateSemaphore.acquire()
@@ -121,7 +127,7 @@ class GameNetSocket:
         # Only increment sequence number if packet is reliable
         if not packet.isUnreliable():
             self.context.seq += len(data)
-        self.context.sendWindow.put(SendingHUDPPacket(packet))
+        self.context.sendBuffer.put(SendingHUDPPacket(packet))
 
     def recv(self) -> bytes:
         """
@@ -137,7 +143,7 @@ class GameNetSocket:
         """
         fin = HUDPPacket.create(self.context.seq, self.context.ack, isReliable=True, isFin=True)
         self.context.seq += 1
-        self.context.sendWindow.put(SendingHUDPPacket(fin))
+        self.context.sendBuffer.put(SendingHUDPPacket(fin))
 
         # Semaphore is needed to prevent race-conditions from multiple threads trying to change states.
         self.context.stateSemaphore.acquire()
@@ -149,12 +155,24 @@ class GameNetSocket:
         self.context.closeSemaphore.acquire()
         return
 
+    def setEnableLogSend(self, newValue: bool):
+        """
+        Turn on logging for sent packets
+        """
+        self.logger.setEnableLogSend(newValue)
+
+    def setEnableLogRecv(self, newValue: bool):
+        """
+        Turn on logging for received packets
+        """
+        self.logger.setEnableLogRecv(newValue)
+
     def __transition(self, newState: GNSState):
         """
         Transition the socket's state to a new one.
         :param newState: The new state to be changed to.
         """
-        print(type(newState))
+        self.logger.logInfo(f"State changed from {self.state.__class__.__name__} to {newState.__class__.__name__}")
         self.state = newState
 
     def __routine(self):
@@ -183,7 +201,7 @@ class GameNetSocket:
 
             # Put timed-out packets into 'sendWindow'
             currentTime = time.time()
-            while self.context.sendBuffer.qsize() > 0:
+            while self.context.sendBuffer.qsize() > 0 and not self.context.sendWindow.full():
                 sendingPacket = self.context.sendBuffer.get()
                 # If the sequence number of this packet has already been acknowledged by
                 # remote, there is no need to transmit it.
@@ -197,7 +215,7 @@ class GameNetSocket:
                     break
                 self.context.sendWindow.put(sendingPacket)
 
-            time.sleep(0.010)
+            time.sleep(0.005)
 
     def __send(self):
         """
@@ -209,6 +227,7 @@ class GameNetSocket:
                 break
             try:
                 sendingPacket = self.context.sendWindow.get(timeout=0.200)
+                self.logger.logSend(sendingPacket)
                 packetBytes = sendingPacket.packet.toBytes()
                 if self.context.destAddrPort:
                     self.context.sock.sendto(packetBytes, self.context.destAddrPort)
@@ -218,7 +237,7 @@ class GameNetSocket:
                 # If there are still retries left, put it back into the buffer
                 if sendingPacket.retryLeft > 0:
                     self.context.sendBuffer.put(sendingPacket)
-            except queue.Empty as e:
+            except queue.Empty:
                 continue
 
     def __recv(self):
@@ -237,7 +256,8 @@ class GameNetSocket:
                     if self.context.destAddrPort is not None and addrPort != self.context.destAddrPort:
                         continue
                     packet = HUDPPacket.fromBytes(data)
+                    self.logger.logRecv(packet)
                     self.context.shouldSendAck = self.context.shouldSendAck or packet.isDataPacket()
                     self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))
-            except socket.timeout as e:
+            except socket.timeout:
                 continue

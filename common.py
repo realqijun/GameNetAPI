@@ -15,12 +15,12 @@ The time offset to retransmit this packet
 """
 
 
+AddrPort = Tuple[str, int]
+
+
 class IllegalStateChangeException(Exception):
     def __init__(self, message: str):
         self.message = message
 
     def __str__(self):
         return f"Invalid State Change: {self.message}"
-
-
-AddrPort = Tuple[str, int]
