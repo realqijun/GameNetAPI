@@ -150,7 +150,6 @@ def run_client():
         test_throughput(sock)
         test_unreliable(sock)
 
-        # --- Cleanly close connection ---
         print("[Client] All tests done. Closing connection.")
         sock.send(b'CLOSE', True)
 

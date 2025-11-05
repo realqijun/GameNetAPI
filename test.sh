@@ -1,8 +1,25 @@
-#!/bin/sh
+#!/bin/bash
 
-# Set variables
+set -e
+
+SERVER_PID=""
+
+cleanup() {
+    echo "--- Cleanup handler running ---"
+    # Check if SERVER_PID has been set and if the process actually exists
+    if [ -n "$SERVER_PID" ] && ps -p $SERVER_PID > /dev/null; then
+        echo "--- Cleaning up Test Server (PID: $SERVER_PID) ---"
+        kill $SERVER_PID
+        wait $SERVER_PID 2>/dev/null
+        echo "--- Server cleaned up ---"
+    else
+        echo "--- No server process to clean up ---"
+    fi
+}
+
+trap cleanup EXIT INT TERM
+
 TEST_NAME=$1
-TEST_DIR="tests/"
 
 if [ -z "$TEST_NAME" ]; then
     echo "Usage: $0 <test_name>"
@@ -46,23 +63,25 @@ if [ ! -f "venv/bin/activate" ]; then
 fi
 
 . venv/bin/activate
-echo "Installing requirements (if any)..."
-# pip3 install -r requirements.txt # Uncomment if you have a requirements.txt
+echo "Installing requirements..."
+pip3 install -r requirements.txt
 if [ $? -ne 0 ]; then
     echo "Failed to install requirements."
     exit 1
 fi
 
 echo "--- Starting Test Server (in background) ---"
-python3 -m tests.test_server &
+python3 -u -m tests.test_server &
 SERVER_PID=$!
 
 # Give server time to bind and listen
 sleep 1
 
 echo "--- Running Test Client (test driver) ---"
-python3 -m tests.test_client
-CLIENT_EXIT_CODE=$? # Capture the client's exit code
+set +e
+python3 -u -m tests.test_client 2>&1 | tee client.log
+CLIENT_EXIT_CODE=${PIPESTATUS[0]}
+set -e
 
 echo "--- Cleaning up Test Server (PID: $SERVER_PID) ---"
 kill $SERVER_PID
