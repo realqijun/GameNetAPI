@@ -6,12 +6,10 @@ from api.gns import GameNetSocket
 SERVER_ADDR = ('127.0.0.1', 6767)
 CLIENT_ADDR = ('127.0.0.1', 4896)
 
-def test_data_integrity(sock: GameNetSocket):
+def test_data_integrity(sock: GameNetSocket, test_data: bytes):
     print("--- 1. Running Data Integrity Test ---")
     sock.send(b'TEST_INTEGRITY', True)
 
-    # Generate 256B of test data
-    test_data = os.urandom(256)
     chunk_size = 1400
 
     print(f"Sending {len(test_data)} bytes in {len(test_data)//chunk_size} chunks...")
@@ -36,7 +34,6 @@ def test_data_integrity(sock: GameNetSocket):
     print(f"Total Sent:     {len(sent_data)} bytes")
     print(f"Total Received: {len(received_data)} bytes")
 
-    # THE ACTUAL TEST
     assert sent_data == received_data, "Data mismatch!"
     assert len(sent_data) == len(test_data), "Sent data length mismatch!"
     assert len(received_data) == len(test_data), "Received data length mismatch!"
@@ -44,9 +41,6 @@ def test_data_integrity(sock: GameNetSocket):
     print("--- Data Integrity Test: PASSED ---")
 
 def test_rtt(sock: GameNetSocket):
-    """
-    Sends 20 'ping' packets and measures the min/avg/max RTT.
-    """
     print("--- 2. Running RTT Test ---")
     sock.send(b'TEST_RTT', True)
 
@@ -60,7 +54,7 @@ def test_rtt(sock: GameNetSocket):
         end_time = time.monotonic()
 
         if data == b'PING':
-            rtt = (end_time - start_time) * 1000 # in ms
+            rtt = (end_time - start_time) * 1000
             rtt_list.append(rtt)
             print(f"Ping {i+1}/20: RTT = {rtt:.2f} ms")
         else:
@@ -81,9 +75,6 @@ def test_rtt(sock: GameNetSocket):
     print("--- RTT Test: COMPLETED ---")
 
 def test_throughput(sock: GameNetSocket):
-    """
-    Blasts 5MB of data and measures time to calculate throughput.
-    """
     print("--- 3. Running Throughput Test ---")
     sock.send(b'TEST_THROUGHPUT', True)
 
@@ -114,18 +105,16 @@ def test_throughput(sock: GameNetSocket):
     print("--- Throughput Test: COMPLETED ---")
 
 def test_unreliable(sock: GameNetSocket):
-    """
-    Sends 1000 unreliable packets and asks server how many it got.
-    """
     print("--- 4. Running Unreliable Send Test ---")
     sock.send(b'TEST_UNRELIABLE', True)
+    time.sleep(0.5)
 
     total_to_send = 1000
     print(f"Sending {total_to_send} unreliable packets...")
 
     for _ in range(total_to_send):
-        sock.send(b'UNRELIABLE_PING', False) # isReliable=False
-        time.sleep(0.001) # 1ms gap
+        sock.send(b'UNRELIABLE_PING', False)
+        time.sleep(0.001)
 
     print("All packets sent. Waiting for server count...")
 
@@ -149,25 +138,27 @@ def run_client():
     sock.bind(CLIENT_ADDR)
     print(f"[Client] Connecting to {SERVER_ADDR}...")
 
+    with open('tests/test_cases/1.txt', 'rb') as f:
+        test_data = f.read()
+
     try:
         sock.connect(SERVER_ADDR)
         print("[Client] Connected to server.")
 
         # --- Run all tests ---
-        test_data_integrity(sock)
+        test_data_integrity(sock, test_data)
         test_rtt(sock)
         test_throughput(sock)
         test_unreliable(sock)
 
-        # --- Cleanly close connection ---
         print("[Client] All tests done. Closing connection.")
         sock.send(b'CLOSE', True)
 
     except Exception as e:
         print(f"\n--- TEST FAILED ---", file=sys.stderr)
         print(f"Error: {e}", file=sys.stderr)
-        sock.close() # Force close
-        sys.exit(1) # Exit with error code to fail the shell script
+        sock.close()
+        sys.exit(1)
 
     finally:
         sock.close()
