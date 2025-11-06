@@ -3,10 +3,11 @@
 set -e
 
 CLIENT_PID=""
+SERVER_PID=""
 
 cleanup() {
     echo "--- Cleanup handler running ---"
-    # Check if CLIENT_PID has been set and if the process actually exists
+
     if [ -n "$CLIENT_PID" ] && ps -p $CLIENT_PID > /dev/null; then
         echo "--- Cleaning up Test Client (PID: $CLIENT_PID) ---"
         kill $CLIENT_PID
@@ -14,6 +15,15 @@ cleanup() {
         echo "--- Client cleaned up ---"
     else
         echo "--- No client process to clean up ---"
+    fi
+
+    if [ -n "$SERVER_PID" ] && ps -p $SERVER_PID > /dev/null; then
+        echo "--- Cleaning up Test Server (PID: $SERVER_PID) ---"
+        kill $SERVER_PID
+        wait $SERVER_PID 2>/dev/null
+        echo "--- Server cleaned up ---"
+    else
+        echo "--- No server process to clean up ---"
     fi
 }
 
@@ -41,24 +51,24 @@ if [ -z "$TEST_NAME" ]; then
     exit 1
 fi
 
-case "$TEST_NAME" in
-    low_loss)
-        echo "--- Setting up LOW LOSS (1%) and LOW LATENCY (50ms) ---"
-        bash tests/setup_netem.sh low_loss
-        ;;
-    high_loss)
-        echo "--- Setting up HIGH LOSS (12%) and HIGH LATENCY (100ms) ---"
-        bash tests/setup_netem.sh high_loss
-        ;;
-    default)
-        echo "--- Setting up DEFAULT (no loss, low latency) ---"
-        bash tests/setup_netem.sh default
-        ;;
-    *)
-        echo "Invalid test name. Use 'low_loss', 'high_loss', or 'default'."
-        exit 1
-        ;;
-esac
+# case "$TEST_NAME" in
+#     low_loss)
+#         echo "--- Setting up LOW LOSS (1%) and LOW LATENCY (50ms) ---"
+#         bash tests/setup_netem.sh low_loss
+#         ;;
+#     high_loss)
+#         echo "--- Setting up HIGH LOSS (12%) and HIGH LATENCY (100ms) ---"
+#         bash tests/setup_netem.sh high_loss
+#         ;;
+#     default)
+#         echo "--- Setting up DEFAULT (no loss, low latency) ---"
+#         bash tests/setup_netem.sh default
+#         ;;
+#     *)
+#         echo "Invalid test name. Use 'low_loss', 'high_loss', or 'default'."
+#         exit 1
+#         ;;
+# esac
 
 if ! command -v python3 >/dev/null 2>&1; then
     echo "Error: python3 is not installed or not in PATH."
