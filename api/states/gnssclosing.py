@@ -36,7 +36,7 @@ class GNSStateClosing(GNSState):
                 context.closeSemaphore.release()
                 return GNSStateTimeWait()
             elif packet.isSynAck() and packet.seq + 1 == context.ack:
-                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.rec, context.ack)))
+                context.sendBuffer.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.rec, context.ack)))
             elif packet.isRst() and packet.seq == context.ack:
                 return GNSStateTerminated()
             elif packet.isPureAck():

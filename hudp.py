@@ -59,24 +59,24 @@ class HUDPFlags:
             return False
 
         return (
-                self.isReliable == other.isReliable and
-                self.isAck == other.isAck and
-                self.isSyn == other.isSyn and
-                self.isFin == other.isFin and
-                self.isRst == other.isRst
+            self.isReliable == other.isReliable and
+            self.isAck == other.isAck and
+            self.isSyn == other.isSyn and
+            self.isFin == other.isFin and
+            self.isRst == other.isRst
         )
 
     def __str__(self):
-        string = "Reliable " if self.isReliable else "Unreliable "
+        string = "\033[96mREL \033[0m" if self.isReliable else "\033[90mUNR \033[0m"
         if self.isAck:
-            string += "ACK "
+            string += "\033[102m ACK \033[0m"
         if self.isSyn:
-            string += "SYN "
+            string += "\033[105m SYN \033[0m"
         if self.isFin:
-            string += "FIN "
+            string += "\033[101m FIN \033[0m"
         if self.isRst:
-            string += "RST "
-        return string[:-1]  # -1 to remove the last space from the string
+            string += "\033[101m RST \033[0m"
+        return string
 
 
 class HUDPPacket:
@@ -86,7 +86,7 @@ class HUDPPacket:
 
     def __init__(self, time: int, seq: int, ack: int, checksum: int, flags: HUDPFlags, content: bytes):
         self.time = time
-        """ Timestamp in milliseconds when this packet was created """
+        """ Timestamp in seconds when this packet was created """
 
         self.seq = seq
         """ Sequence Number of the packet """
@@ -130,7 +130,7 @@ class HUDPPacket:
         assert (len(data) >= 20)
         flags = HUDPFlags.fromBytes(data[18:20])
         packet = HUDPPacket(
-            struct.unpack("!Q", data[0:8])[0],
+            struct.unpack("!d", data[0:8])[0],
             struct.unpack("!I", data[8:12])[0],
             struct.unpack("!I", data[12:16])[0],
             struct.unpack("!H", data[16:18])[0],
@@ -147,7 +147,7 @@ class HUDPPacket:
         Use this method over the __init__ method when creating a HUDP packet.
         """
         flags = HUDPFlags(isReliable, isAck, isSyn, isFin, isRst)
-        currentTime = round(time.time() * 1000)
+        currentTime = time.time()
         packet = HUDPPacket(currentTime, seq, ack, 0, flags, content)
         packet.checksum = HUDPPacket.checksum1s(packet.toBytes())
         return packet
@@ -163,8 +163,8 @@ class HUDPPacket:
         """
         Convert the packet into its bytes' representation.
         """
-        packet = (struct.pack("!QIIH", self.time, self.seq, self.ack, self.checksum)
-                  + self.flags.toBytes() + self.content)
+        packet = (struct.pack("!dIIH", self.time, self.seq, self.ack, self.checksum) +
+                  self.flags.toBytes() + self.content)
         assert (len(packet) >= 20)
         return packet
 
@@ -232,21 +232,23 @@ class HUDPPacket:
             return False
 
         return (
-                self.time == other.time and
-                self.seq == other.seq and
-                self.ack == other.ack and
-                self.checksum == other.checksum and
-                self.flags == other.flags and
-                self.content == other.content
+            self.time == other.time and
+            self.seq == other.seq and
+            self.ack == other.ack and
+            self.checksum == other.checksum and
+            self.flags == other.flags
         )
 
     def __str__(self):
-        time = datetime.fromtimestamp(self.time / 1000)
+        time = datetime.fromtimestamp(self.time)
         timeString = time.strftime("%M:%S:%f")[:-3]
         return (
             f"[{timeString}] SEQ: {self.seq:>5} ACK: "
-            f'{self.ack:>5} Flags: {self.flags} {"DATA" if self.isDataPacket() else ""}'
+            f'{self.ack:>5} Flags: {self.flags}\033[100m{" DATA " if self.isDataPacket() else ""}\033[0m'
         )
 
     def __lt__(self, other: HUDPPacket):
         return self.seq < other.seq
+
+    def __hash__(self):
+        return self.seq

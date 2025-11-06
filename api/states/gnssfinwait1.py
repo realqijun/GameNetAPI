@@ -38,10 +38,10 @@ class GNSStateFinWait1(GNSState):
             recvingPacket = context.recvWindow.get()
             packet = recvingPacket.packet
             if packet.isSynAck() and packet.seq + 1 == context.ack:
-                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.rec, context.ack)))
+                context.sendBuffer.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.rec, context.ack)))
             elif packet.isFin() and packet.seq == context.ack:  # Simultaneous close
                 context.ack = packet.seq + 1
-                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.seq, context.ack)))
+                context.sendBuffer.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.seq, context.ack)))
                 return GNSStateClosing()
             elif packet.isRst() and packet.seq == context.ack:
                 return GNSStateTerminated()

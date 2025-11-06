@@ -9,10 +9,13 @@ ACK_TIMEOUT = 0.200
 How long does it take to skip the current ACK if the socket is stuck there
 """
 
-RETRY_INCREMENT = 0.050
+RETRY_INCREMENT = 0.020
 """
 The time offset to retransmit this packet
 """
+
+
+AddrPort = Tuple[str, int]
 
 
 class IllegalStateChangeException(Exception):
@@ -23,4 +26,6 @@ class IllegalStateChangeException(Exception):
         return f"Invalid State Change: {self.message}"
 
 
-AddrPort = Tuple[str, int]
+class SocketTimeoutException(Exception):
+    def __str__(self):
+        return "Socket timed out"

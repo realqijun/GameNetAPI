@@ -1,8 +1,8 @@
 from api.gns import GameNetSocket
 from common import SERVER_PORT, FORWARDER_PORT
 from datetime import datetime
-from hudp import HUDPPacket
 import time
+
 
 class PacketStats:
     def __init__(self):
@@ -16,29 +16,16 @@ class PacketStats:
         print(f"[{timestamp}] SEQ={packet.seq} | {channel} | "
               f"RTT={time.time() * 1000 - packet.time:.2f}ms")
 
+
 def main():
-    try:
-        sock = GameNetSocket()
-        sock.bind(('127.0.0.1', SERVER_PORT))
-        sock.connect(('127.0.0.1', FORWARDER_PORT))
-        
-        stats = PacketStats()
+    sock = GameNetSocket()
+    sock.bind(('127.0.0.1', SERVER_PORT))
+    sock.connect(('127.0.0.1', FORWARDER_PORT))
 
-        while True:
-            try:
-                data = sock.recv()
-                packet = HUDPPacket.fromBytes(data)
-                stats.log_packet(packet)
-            except KeyboardInterrupt:
-                print("Server shutting down...")
-                break
-            except Exception as e:
-                print(f"Error: {e}")
-                break
+    for i in range(1000):
+        data = sock.recv()
 
-    finally:
-        if sock:
-            sock.close()
+    sock.close()
 
-if __name__ == "__main__":
-    main()
+
+main()

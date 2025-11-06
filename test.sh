@@ -19,33 +19,46 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-TEST_NAME=$1
+RELIABLE_MODE=$1
 
-# if [ -z "$TEST_NAME" ]; then
-#     echo "Usage: $0 <test_name>"
-#     echo "  <test_name> can be: low_loss, high_loss, or cleanup"
-#     exit 1
-# fi
+if [ -z "$RELIABLE_MODE" ]; then
+    echo "Usage: $0 <reliable_mode> <test_name>"
+    echo "  <reliable_mode> can be: reliable/r or unreliable/u"
+    exit 1
+fi
 
-# case "$TEST_NAME" in
-#     low_loss)
-#         echo "--- Setting up LOW LOSS (1%) and LOW LATENCY (50ms) ---"
-#         bash tests/setup_netem.sh low_loss
-#         ;;
-#     high_loss)
-#         echo "--- Setting up HIGH LOSS (12%) and HIGH LATENCY (100ms) ---"
-#         bash tests/setup_netem.sh high_loss
-#         ;;
-#     cleanup)
-#         echo "--- Cleaning up network rules ---"
-#         bash tests/setup_netem.sh cleanup
-#         exit 0
-#         ;;
-#     *)
-#         echo "Invalid test name. Use 'low_loss', 'high_loss', or 'cleanup'."
-#         exit 1
-#         ;;
-# esac
+if [ "$RELIABLE_MODE" = "cleanup" ]; then
+    echo "--- Cleaning up network rules ---"
+    bash tests/setup_netem.sh cleanup
+    exit 0
+fi
+
+TEST_NAME=$2
+
+if [ -z "$TEST_NAME" ]; then
+    echo "Usage: $0 $1 <test_name>"
+    echo "  <test_name> can be: low_loss, high_loss, or default"
+    exit 1
+fi
+
+case "$TEST_NAME" in
+    low_loss)
+        echo "--- Setting up LOW LOSS (1%) and LOW LATENCY (50ms) ---"
+        bash tests/setup_netem.sh low_loss
+        ;;
+    high_loss)
+        echo "--- Setting up HIGH LOSS (12%) and HIGH LATENCY (100ms) ---"
+        bash tests/setup_netem.sh high_loss
+        ;;
+    default)
+        echo "--- Setting up DEFAULT (no loss, low latency) ---"
+        bash tests/setup_netem.sh default
+        ;;
+    *)
+        echo "Invalid test name. Use 'low_loss', 'high_loss', or 'default'."
+        exit 1
+        ;;
+esac
 
 if ! command -v python3 >/dev/null 2>&1; then
     echo "Error: python3 is not installed or not in PATH."
@@ -70,22 +83,57 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "--- Starting Test Server (in background) ---"
-python3 -u -m tests.test_server > server.log 2>&1 &
-SERVER_PID=$!
+LOG_DIR="logs"
+mkdir -p "$LOG_DIR"
 
-# Give server time to bind and listen
-sleep 1
+if [ "$RELIABLE_MODE" == "reliable" ] || [ "$RELIABLE_MODE" == "r" ]; then
+    echo "--- Running in RELIABLE mode ---"
+    echo "--- Starting Test Server (in background) for reliable data transfer ---"
+    python3 -u -m tests.test_server_r > "$LOG_DIR/server_r.log" 2>&1 &
+    SERVER_PID=$!
 
-echo "--- Running Test Client (test driver) ---"
-set +e
-python3 -u -m tests.test_client 2>&1 | tee client.log
-CLIENT_EXIT_CODE=${PIPESTATUS[0]}
-set -e
+    # Give server time to bind and listen
+    sleep 1
 
-echo "--- Cleaning up Test Server (PID: $SERVER_PID) ---"
-kill $SERVER_PID
-wait $SERVER_PID 2>/dev/null
+    echo "--- Running Test Client (test driver) for reliable data transfer ---"
+    set +e
+    python3 -u -m tests.test_client_r 2>&1 | tee "$LOG_DIR/client_r.log"
+    CLIENT_EXIT_CODE=${PIPESTATUS[0]}
+    set -e
+
+elif [ "$RELIABLE_MODE" == "unreliable" ] || [ "$RELIABLE_MODE" == "u" ]; then
+    echo "--- Running in UNRELIABLE mode ---"
+    echo "--- Starting Test Server (in background) for unreliable data transfer ---"
+    python3 -u -m tests.test_server_u > "$LOG_DIR/server_u.log" 2>&1 &
+    SERVER_PID=$!
+
+    sleep 1
+
+    echo "--- Running Test Client (test driver) for unreliable data transfer ---"
+    set +e
+    python3 -u -m tests.test_client_u 2>&1 | tee "$LOG_DIR/client_u.log"
+    CLIENT_EXIT_CODE=${PIPESTATUS[0]}
+    set -e
+
+elif [ "$RELIABLE_MODE" == "ur" ] || [ "$RELIABLE_MODE" == "mixed" ]; then
+    echo "--- Running in mixed RELIABLE and UNRELIABLE mode ---"
+    echo "--- Starting Test Server (in background) for mixed data transfer ---"
+    python3 -u -m tests.test_server_ur > "$LOG_DIR/server_ur.log" 2>&1 &
+    SERVER_PID=$!
+
+    sleep 1
+
+    echo "--- Running Test Client (test driver) for mixed data transfer ---"
+    set +e
+    python3 -u -m tests.test_client_ur 2>&1 | tee "$LOG_DIR/client_ur.log"
+    CLIENT_EXIT_CODE=${PIPESTATUS[0]}
+    set -e
+
+else
+    echo "Invalid reliable mode. Use 'reliable/r', 'unreliable/u', or 'mixed/ur'."
+    exit 1
+fi
+
 
 if [ $CLIENT_EXIT_CODE -eq 0 ]; then
     echo "--- RESULT: ALL TESTS PASSED ---"

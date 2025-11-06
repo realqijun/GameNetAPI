@@ -1,7 +1,7 @@
 from api.states.gnsstate import GNSState
 from api.states.gnssestablished import GNSStateEstablished
 from api.states.gnsssynrcvd import GNSStateSynRcvd
-from api.states.gnssinitial import GNSStateInitial
+from api.states.gnssbound import GNSStateBound
 from api.gnscontext import GNSContext, SendingHUDPPacket
 from hudp import HUDPPacket
 
@@ -25,15 +25,15 @@ class GNSStateSynSent(GNSState):
             if packet.isSynAck() and packet.ack == context.seq:
                 context.ack = packet.seq + 1
                 context.rec = packet.ack
-                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.seq, context.ack)))
+                context.sendBuffer.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.seq, context.ack)))
                 context.connectSemaphore.release()
                 return GNSStateEstablished()
             elif packet.isSyn():  # Simultaneous open
                 context.ack = packet.seq + 1
                 synAck = HUDPPacket.create(context.seq - 1, context.ack, isReliable=True, isSyn=True, isAck=True)
-                context.sendWindow.put(SendingHUDPPacket(synAck))
+                context.sendBuffer.put(SendingHUDPPacket(synAck))
                 return GNSStateSynRcvd()
             elif packet.isRst() and packet.ack == context.seq:
-                return GNSStateInitial()
+                return GNSStateBound()
 
         return self
