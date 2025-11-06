@@ -1,6 +1,6 @@
 from api.states.gnssclosewait import GNSStateCloseWait
 from api.states.gnsstate import GNSState
-from api.gnscontext import GNSContext, SendingHUDPPacket, RecvingHUDPPacket
+from api.gnscontext import GNSContext, SendingHUDPPacket
 from api.states.gnssterminated import GNSStateTerminated
 from common import ACK_TIMEOUT
 from hudp import HUDPPacket

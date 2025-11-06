@@ -1,6 +1,6 @@
 from api.gnscontext import SendingHUDPPacket
 from hudp import HUDPPacket
-from typing import Dict, List, Deque, Tuple
+from typing import Dict, Deque, Tuple
 from datetime import datetime
 import time
 

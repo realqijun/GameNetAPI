@@ -43,6 +43,8 @@ class SendingHUDPPacket:
         """
         Provide the ordering for the PriorityQueue.
         """
+        if self.packet.seq == other.packet.seq:
+            return self.packet.time < other.packet.time
         return self.packet.seq < other.packet.seq
 
 
@@ -69,9 +71,9 @@ class RecvingHUDPPacket:
         Inside each packet type, the one with the smallest sequence number is ordered first.
         """
 
-        if self.packet.flags.isReliable == other.packet.flags.isReliable:
-            return self.packet.seq < other.packet.seq
-        return self.packet.flags.isReliable < other.packet.flags.isReliable
+        if self.packet.seq == other.packet.seq:
+            return self.packet.flags.isReliable < other.packet.flags.isReliable
+        return self.packet.seq < other.packet.seq
 
 
 class GNSContext:

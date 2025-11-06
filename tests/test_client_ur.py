@@ -1,5 +1,6 @@
 from api.gns import GameNetSocket
 from time import sleep
+import random
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
@@ -13,15 +14,13 @@ def main():
 
     # client connected
 
-    # test single packet
-    client.send(b"hello world this is client sending a packet", True)
-    sleep(0.5)
-
-    with open("tests/test_cases/2.txt", "r") as f:
-        data = f.readlines() # cant send entire file because underlying udp layer max payload is 65507 bytes
+    with open("tests/test_cases/3.txt", "r") as f:
+        data = f.readlines()
+        reliable = True
         for line in data:
-            client.send(line.encode(), True) # reliable send
-            sleep(0.01) # slight delay to avoid overwhelming the server
+            client.send(line.encode(), reliable)
+            if random.random() <= 0.7:
+                reliable = not reliable
 
     # all data sent
     client.close()
