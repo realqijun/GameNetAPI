@@ -27,11 +27,17 @@ if [ -z "$RELIABLE_MODE" ]; then
     exit 1
 fi
 
+if [ "$RELIABLE_MODE" = "cleanup" ]; then
+    echo "--- Cleaning up network rules ---"
+    bash tests/setup_netem.sh cleanup
+    exit 0
+fi
+
 TEST_NAME=$2
 
 if [ -z "$TEST_NAME" ]; then
     echo "Usage: $0 $1 <test_name>"
-    echo "  <test_name> can be: low_loss, high_loss, cleanup, or default"
+    echo "  <test_name> can be: low_loss, high_loss, or default"
     exit 1
 fi
 
@@ -44,17 +50,12 @@ case "$TEST_NAME" in
         echo "--- Setting up HIGH LOSS (12%) and HIGH LATENCY (100ms) ---"
         bash tests/setup_netem.sh high_loss
         ;;
-    cleanup)
-        echo "--- Cleaning up network rules ---"
-        bash tests/setup_netem.sh cleanup
-        exit 0
-        ;;
     default)
         echo "--- Setting up DEFAULT (no loss, low latency) ---"
         bash tests/setup_netem.sh default
         ;;
     *)
-        echo "Invalid test name. Use 'low_loss', 'high_loss', 'cleanup', or 'default'."
+        echo "Invalid test name. Use 'low_loss', 'high_loss', or 'default'."
         exit 1
         ;;
 esac
@@ -120,10 +121,6 @@ else
     exit 1
 fi
 
-
-echo "--- Cleaning up Test Server (PID: $SERVER_PID) ---"
-kill $SERVER_PID
-wait $SERVER_PID 2>/dev/null
 
 if [ $CLIENT_EXIT_CODE -eq 0 ]; then
     echo "--- RESULT: ALL TESTS PASSED ---"
