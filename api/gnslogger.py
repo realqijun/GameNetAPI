@@ -4,7 +4,6 @@ from typing import Dict, Deque, Tuple
 from datetime import datetime
 import time
 
-
 class Metrics:
     def __init__(self):
         self.latencies: Deque[Tuple[float, int]] = Deque()
@@ -13,17 +12,23 @@ class Metrics:
         self.totalJitters = 0
         self.dataSizes: Deque[Tuple[float, int]] = Deque()
         self.totalDataSizes = 0
+        self.lastTransitTime = 0
+        self.currentJitter = 0
 
     def updateMetrics(self, packet: HUDPPacket):
         currentTime = time.time()
-
         latency = currentTime - packet.time
+
+        if hasattr(self, 'lastTransitTime') and self.lastTransitTime > 0:
+            # RFC 3550 jitter calculation
+            D = latency - self.lastTransitTime
+            self.currentJitter += (abs(D) - self.currentJitter) / 16
+            self.jitters.append((currentTime, self.currentJitter))
+            self.totalJitters += self.currentJitter
+
+        self.lastTransitTime = latency
         self.totalLatencies += latency
         self.latencies.append((currentTime, latency))
-        if len(self.latencies) > 0:
-            jitter = abs(latency - self.latencies[-1][1])
-            self.totalJitters += jitter
-            self.jitters.append((currentTime, jitter))
         size = len(packet.toBytes())
         self.totalDataSizes += size
         self.dataSizes.append((currentTime, size))
