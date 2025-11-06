@@ -1,17 +1,17 @@
 from api.gnscontext import SendingHUDPPacket
 from hudp import HUDPPacket
-from typing import Dict, Deque, Tuple
+from typing import Dict, List, Tuple
 from datetime import datetime
+from functools import reduce
+from statistics import mean
 import time
+
 
 class Metrics:
     def __init__(self):
-        self.latencies: Deque[Tuple[float, int]] = Deque()
-        self.totalLatencies = 0
-        self.jitters: Deque[Tuple[float, int]] = Deque()
-        self.totalJitters = 0
-        self.dataSizes: Deque[Tuple[float, int]] = Deque()
-        self.totalDataSizes = 0
+        self.latencies: List[int] = []
+        self.jitters: List[int] = []
+        self.dataSizes: List[Tuple[float, int]] = []
         self.lastTransitTime = 0
         self.currentJitter = 0
 
@@ -23,22 +23,21 @@ class Metrics:
             # RFC 3550 jitter calculation
             D = latency - self.lastTransitTime
             self.currentJitter += (abs(D) - self.currentJitter) / 16
-            self.jitters.append((currentTime, self.currentJitter))
-            self.totalJitters += self.currentJitter
+            self.jitters.append(self.currentJitter)
 
         self.lastTransitTime = latency
-        self.totalLatencies += latency
-        self.latencies.append((currentTime, latency))
-        size = len(packet.toBytes())
-        self.totalDataSizes += size
-        self.dataSizes.append((currentTime, size))
+        self.latencies.append(latency)
+        self.dataSizes.append((currentTime, len(packet.toBytes())))
 
     def __str__(self):
-        avgLatency = 0 if len(self.latencies) == 0 else round(self.totalLatencies / len(self.latencies) * 1000)
-        jitter = 0 if len(self.jitters) == 0 else round(self.totalJitters / len(self.jitters) * 1000)
-        throughput = 0 \
-            if len(self.dataSizes) == 0 or self.dataSizes[-1][0] - self.dataSizes[0][0] == 0 \
-            else round(self.totalDataSizes / (self.dataSizes[-1][0] - self.dataSizes[0][0]))
+        avgLatency = round(mean(self.latencies) * 1000)
+        jitter = round(mean(self.jitters) * 1000)
+        throughput = 0
+        if len(self.dataSizes):
+            totalTime = self.dataSizes[-1][0] - self.dataSizes[0][0]
+            if totalTime > 0:
+                totalDataSizes = reduce(lambda acc, tup: acc + tup[1], self.dataSizes, 0)
+                throughput = round(totalDataSizes / totalTime)
         return (
             f"Average Latency: {avgLatency} ms | "
             f"Jitter: {jitter} ms | "
@@ -89,8 +88,10 @@ class GNSLogger:
         print(f"[{timeString}]: \033[43m API \033[0m {message}", flush=True)
 
     def logInfo(self, message: str):
-        timeString = datetime.now().strftime("%M:%S:%f")[:-3]
-        print(f"[{timeString}]: \033[43m API \033[0m \033[100m INFO \033[0m {message}", flush=True)
+        self.log(f"\033[100m INFO \033[0m {message}")
+
+    def logMtrc(self, message: str):
+        self.log(f"\033[100m MTRC \033[0m {message}")
 
     def logSend(self, sendingPacket: SendingHUDPPacket):
         packet = sendingPacket.packet
@@ -120,7 +121,7 @@ class GNSLogger:
         if packet.flags.isAck and packet.ack > self.lastAck:
             rtt = round((packet.time - self.sendSeqRecord[self.lastAck]) * 1000)
             if self.enableLogMetrics:
-                self.logInfo(f"SEQ {self.lastAck} -> {packet.ack}: RTT ≈ {rtt} ms")
+                self.logMtrc(f"SEQ {self.lastAck} -> {packet.ack}: RTT ≈ {rtt} ms")
             self.lastAck = packet.ack
 
         if packet.isUnreliable():
