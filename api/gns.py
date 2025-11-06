@@ -13,7 +13,7 @@ from api.states.gnssaccept import GNSStateAccept
 from api.states.gnsssynsent import GNSStateSynSent
 from api.states.gnsstate import GNSState
 from api.states.gnssterminated import GNSStateTerminated
-from common import AddrPort, IllegalStateChangeException, RETRY_INCREMENT
+from common import AddrPort, IllegalStateChangeException, SocketTimeoutException, RETRY_INCREMENT
 from hudp import HUDPPacket
 from threading import Thread
 import time
@@ -129,13 +129,16 @@ class GameNetSocket:
             self.context.seq += len(data)
         self.context.sendBuffer.put(SendingHUDPPacket(packet))
 
-    def recv(self) -> bytes:
+    def recv(self, timeout=1.000) -> bytes:
         """
         Return data sent from remote. This function will block until there is data to receive.
         A connection must be established before this.
         """
-        data = self.context.recvBuffer.get()
-        return data
+        try:
+            data = self.context.recvBuffer.get(timeout=timeout)
+            return data
+        except queue.Empty:
+            raise SocketTimeoutException()
 
     def close(self):
         """
@@ -256,7 +259,8 @@ class GameNetSocket:
                         continue
                     packet = HUDPPacket.fromBytes(data)
                     self.logger.logRecv(packet)
-                    self.context.shouldSendAck = self.context.shouldSendAck or packet.isDataPacket()
+                    if packet.isReliable() and packet.isDataPacket():
+                        self.context.shouldSendAck = True
                     self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))
             except socket.timeout:
                 continue

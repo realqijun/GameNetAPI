@@ -24,3 +24,8 @@ class IllegalStateChangeException(Exception):
 
     def __str__(self):
         return f"Invalid State Change: {self.message}"
+
+
+class SocketTimeoutException(Exception):
+    def __str__(self):
+        return "Socket timed out"
