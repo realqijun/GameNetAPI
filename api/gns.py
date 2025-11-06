@@ -13,7 +13,7 @@ from api.states.gnssaccept import GNSStateAccept
 from api.states.gnsssynsent import GNSStateSynSent
 from api.states.gnsstate import GNSState
 from api.states.gnssterminated import GNSStateTerminated
-from common import AddrPort, IllegalStateChangeException, SocketTimeoutException, RETRY_INCREMENT
+from common import AddrPort, IllegalStateChangeException, SocketTimeoutException, RETRY_INCREMENT, MAX_RETRY
 from hudp import HUDPPacket
 from threading import Thread
 import time
@@ -170,6 +170,12 @@ class GameNetSocket:
         """
         self.logger.setEnableLogRecv(newValue)
 
+    def setEnableLogMetrics(self, newValue: bool):
+        """
+        Turn on logging for performance metrics
+        """
+        self.logger.setEnableLogMetrics(newValue)
+
     def __transition(self, newState: GNSState):
         """
         Transition the socket's state to a new one.
@@ -200,10 +206,10 @@ class GameNetSocket:
             # Send back Pure ACK if needed
             if self.context.shouldSendAck:
                 self.context.shouldSendAck = False
-                self.context.sendBuffer.put(
+                self.context.sendWindow.put(
                     SendingHUDPPacket(HUDPPacket.createPureAck(self.context.seq, self.context.ack)))
 
-            time.sleep(0.001)
+            time.sleep(0.005)
 
     def __send(self):
         """
@@ -214,33 +220,43 @@ class GameNetSocket:
             if isinstance(self.state, GNSStateTerminated):
                 break
 
+            currentTime = time.time()
+
             # Put queued packets into 'sendWindow'
-            while self.context.sendBuffer.qsize() > 0 and not self.context.sendWindow.full():
+            sendBufferLen = self.context.sendBuffer.qsize()
+            for _ in range(sendBufferLen):
                 sendingPacket = self.context.sendBuffer.get()
                 packet = sendingPacket.packet
-                if packet.isUnreliable():
-                    pass
-                # If this packet has already been sent and ACKed by remote
-                elif sendingPacket.retryLeft < 15 and sendingPacket.packet.seq < self.context.rec:
+
+                # If this packet is reliable and has already been sent and ACKed by remote
+                if packet.isReliable() and sendingPacket.retryLeft < MAX_RETRY and sendingPacket.packet.seq < self.context.rec:
                     continue
 
-                self.context.sendWindow.put(sendingPacket)
+                if sendingPacket.retryAt < currentTime:
+                    self.context.sendWindow.put(sendingPacket)
+                else:
+                    self.context.sendBuffer.put(sendingPacket)
+                if packet.isUnreliable():
+                    pass
 
             sendWindowLen = self.context.sendWindow.qsize()
             for _ in range(sendWindowLen):
                 sendingPacket = self.context.sendWindow.get()
                 self.logger.logSend(sendingPacket)
+
+                # If this packet is reliable and has already been sent and ACKed by remote
+                if packet.isReliable() and sendingPacket.retryLeft < MAX_RETRY and sendingPacket.packet.seq < self.context.rec:
+                    continue
+
                 packetBytes = sendingPacket.packet.toBytes()
                 if self.context.destAddrPort:
                     self.context.sock.sendto(packetBytes, self.context.destAddrPort)
                 else:
                     raise RuntimeError("This branch is not supposed to be matched")
-                sendingPacket.retryLeft -= 1
+                sendingPacket.decrementRetry()
                 # If there are still retries left, put it back into the buffer
                 if sendingPacket.retryLeft > 0:
                     self.context.sendBuffer.put(sendingPacket)
-
-            time.sleep(RETRY_INCREMENT)
 
     def __recv(self):
         """

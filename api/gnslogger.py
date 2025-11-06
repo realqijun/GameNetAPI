@@ -30,14 +30,21 @@ class Metrics:
         self.dataSizes.append((currentTime, len(packet.toBytes())))
 
     def __str__(self):
-        avgLatency = round(mean(self.latencies) * 1000)
-        jitter = round(mean(self.jitters) * 1000)
+        avgLatency = 0
+        if len(self.latencies) > 0:
+            avgLatency = round(mean(self.latencies) * 1000)
+
+        jitter = 0
+        if len(self.jitters) > 0:
+            jitter = round(mean(self.jitters) * 1000)
+
         throughput = 0
         if len(self.dataSizes):
             totalTime = self.dataSizes[-1][0] - self.dataSizes[0][0]
             if totalTime > 0:
                 totalDataSizes = reduce(lambda acc, tup: acc + tup[1], self.dataSizes, 0)
                 throughput = round(totalDataSizes / totalTime)
+
         return (
             f"Average Latency: {avgLatency} ms | "
             f"Jitter: {jitter} ms | "
@@ -91,7 +98,7 @@ class GNSLogger:
         self.log(f"\033[100m INFO \033[0m {message}")
 
     def logMtrc(self, message: str):
-        self.log(f"\033[100m MTRC \033[0m {message}")
+        self.log(f"\033[45m MTRC \033[0m {message}")
 
     def logSend(self, sendingPacket: SendingHUDPPacket):
         packet = sendingPacket.packet

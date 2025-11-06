@@ -2,12 +2,9 @@ from __future__ import annotations
 from threading import Semaphore
 from hudp import HUDPPacket
 from queue import Queue, PriorityQueue
-from common import AddrPort, RETRY_INCREMENT
+from common import AddrPort, MAX_RETRY, RETRY_INCREMENT, MAX_SEND_WINDOW_SIZE
 import socket
 import time
-
-MAX_WINDOW_SIZE = 128
-MAX_RETRY = 15
 
 
 class SendingHUDPPacket:
@@ -27,9 +24,6 @@ class SendingHUDPPacket:
         """
 
         self.retryAt = time.time()
-        """
-        The next time at which this packet will be sent or re-sent.
-        """
 
     def decrementRetry(self):
         """
@@ -37,15 +31,13 @@ class SendingHUDPPacket:
         """
 
         self.retryLeft -= 1
-        self.retryAt = time.time() + RETRY_INCREMENT
+        self.retryAt += RETRY_INCREMENT
 
     def __lt__(self, other: SendingHUDPPacket):
         """
         Provide the ordering for the PriorityQueue.
         """
-        if self.packet.seq == other.packet.seq:
-            return self.packet.time < other.packet.time
-        return self.packet.seq < other.packet.seq
+        return self.retryAt < other.retryAt
 
 
 class RecvingHUDPPacket:
@@ -64,16 +56,16 @@ class RecvingHUDPPacket:
         Address and port number from where this packet was sent.
         """
 
+        self.arrivalTime = time.time()
+        """
+        Arrival time of this packet
+        """
+
     def __lt__(self, other: RecvingHUDPPacket):
         """
         Provide the ordering for the PriorityQueue.
-        Unreliable packets will be ordered first, followed by reliable packets.
-        Inside each packet type, the one with the smallest sequence number is ordered first.
         """
-
-        if self.packet.seq == other.packet.seq:
-            return self.packet.flags.isReliable < other.packet.flags.isReliable
-        return self.packet.seq < other.packet.seq
+        return self.arrivalTime < other.arrivalTime
 
 
 class GNSContext:
@@ -103,7 +95,7 @@ class GNSContext:
         Next expected Sequence Number to be received from remote.
         """
 
-        self.sendWindow: Queue[SendingHUDPPacket] = Queue(maxsize=MAX_WINDOW_SIZE)
+        self.sendWindow: Queue[SendingHUDPPacket] = Queue(maxsize=MAX_SEND_WINDOW_SIZE)
         """
         Queue to store ready-to-send packets. Timeout is 0.200s.
         GameNetSocket will create a thread to continually retrieves packets from this queue and send it.
@@ -117,7 +109,7 @@ class GNSContext:
         GameNetSocket has a routine to check when packets times out and put them into 'sendWindow'.
         """
 
-        self.recvWindow: PriorityQueue[RecvingHUDPPacket] = PriorityQueue(maxsize=MAX_WINDOW_SIZE)
+        self.recvWindow: Queue[RecvingHUDPPacket] = Queue()
         """
         PriorityQueue to store about-to-be-processed packets.
         The Queue is ordered from packets with lowest to highest sequence numbers (e.g. a packet with

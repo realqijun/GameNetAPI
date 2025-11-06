@@ -4,7 +4,7 @@ from api.states.gnsstate import GNSState
 from api.gnscontext import GNSContext, SendingHUDPPacket
 from api.states.gnssterminated import GNSStateTerminated
 from api.states.gnsstimewait import GNSStateTimeWait
-from common import ACK_TIMEOUT
+from common import SKIP_AHEAD_TIMEOUT
 from hudp import HUDPPacket
 
 
@@ -36,7 +36,7 @@ class GNSStateClosing(GNSState):
                 context.closeSemaphore.release()
                 return GNSStateTimeWait()
             elif packet.isSynAck() and packet.seq + 1 == context.ack:
-                context.sendBuffer.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.rec, context.ack)))
+                context.sendWindow.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.rec, context.ack)))
             elif packet.isRst() and packet.seq == context.ack:
                 return GNSStateTerminated()
             elif packet.isPureAck():
@@ -64,7 +64,7 @@ class GNSStateClosing(GNSState):
         currentTime = time.time()
         # The socket has been stuck on this ACK for too long, skip ACK to the nearest next SEQ
         # that it has received
-        if currentTime - self.timeOnCurrentAck > ACK_TIMEOUT and context.recvWindow.qsize() > 0:
+        if currentTime - self.timeOnCurrentAck > SKIP_AHEAD_TIMEOUT and context.recvWindow.qsize() > 0:
             recvingPacket = context.recvWindow.get()
             context.ack = recvingPacket.packet.seq
             context.recvWindow.put(recvingPacket)

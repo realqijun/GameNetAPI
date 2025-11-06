@@ -29,7 +29,7 @@ class GNSStateAccept(GNSState):
                 # Send back SYN ACK, completing the 2nd step in the 3-way handshake
                 synAck = HUDPPacket.create(context.seq, context.ack, isReliable=True, isSyn=True, isAck=True)
                 context.seq += 1
-                context.sendBuffer.put(SendingHUDPPacket(synAck))
+                context.sendWindow.put(SendingHUDPPacket(synAck))
                 return GNSStateSynRcvd()
 
         return self
