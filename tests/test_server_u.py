@@ -1,4 +1,5 @@
 from api.gns import GameNetSocket
+from common import SocketTimeoutException
 import socket
 
 server_addr = ("127.0.0.1", 6767)
@@ -18,7 +19,7 @@ def main():
             for _ in range(expected_len):
                 data = sock.recv()
                 received_packets += 1
-        except socket.timeout:
+        except SocketTimeoutException as e:
             pass
 
     sock.close()
