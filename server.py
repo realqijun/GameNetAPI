@@ -22,12 +22,10 @@ def main():
     sock.bind(('127.0.0.1', SERVER_PORT))
     sock.connect(('127.0.0.1', FORWARDER_PORT))
 
-    for i in range(10000):
+    for i in range(1000):
         data = sock.recv()
 
     sock.close()
-
-    sock.logger.logMetrics()
 
 
 main()

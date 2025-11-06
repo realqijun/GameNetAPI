@@ -24,14 +24,20 @@ class Metrics:
             jitter = abs(latency - self.latencies[-1][1])
             self.totalJitters += jitter
             self.jitters.append((currentTime, jitter))
-        self.totalDataSizes += len(packet.content)
-        self.dataSizes.append((currentTime, len(packet.content)))
+        size = len(packet.toBytes())
+        self.totalDataSizes += size
+        self.dataSizes.append((currentTime, size))
 
     def __str__(self):
+        avgLatency = 0 if len(self.latencies) == 0 else round(self.totalLatencies / len(self.latencies) * 1000)
+        jitter = 0 if len(self.jitters) == 0 else round(self.totalJitters / len(self.jitters) * 1000)
+        throughput = 0 \
+            if len(self.dataSizes) == 0 or self.dataSizes[-1][0] - self.dataSizes[0][0] == 0 \
+            else round(self.totalDataSizes / (self.dataSizes[-1][0] - self.dataSizes[0][0]))
         return (
-            f"Average Latency: {round(self.totalLatencies / len(self.latencies) * 1000)} ms | "
-            f"Jitter: {round(self.totalJitters / len(self.jitters) * 1000)} ms | "
-            f"Throughput: {round(self.totalDataSizes / (self.dataSizes[-1][0] - self.dataSizes[0][0]))} Bps"
+            f"Average Latency: {avgLatency} ms | "
+            f"Jitter: {jitter} ms | "
+            f"Throughput: {throughput} Bps"
         )
 
 
@@ -118,5 +124,6 @@ class GNSLogger:
             self.reliableMetrics.updateMetrics(packet)
 
     def logMetrics(self):
-        self.logInfo(f"{self.unreliableMetrics}")
-        self.logInfo(f"{self.reliableMetrics}")
+        if self.enableLogMetrics:
+            self.logInfo(f"Unreliable: {self.unreliableMetrics}")
+            self.logInfo(f"Reliable: {self.reliableMetrics}")

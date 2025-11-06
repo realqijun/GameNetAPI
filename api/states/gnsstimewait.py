@@ -26,7 +26,7 @@ class GNSStateTimeWait(GNSState):
             if packet.isFin() and packet.seq + 1 == context.ack:
                 context.sendBuffer.put(SendingHUDPPacket(HUDPPacket.createPureAck(context.seq, context.ack)))
 
-        if time.time() - self.initialTime > 120.000:
+        if time.time() - self.initialTime > 5.000:
             return GNSStateTerminated()
 
         return self

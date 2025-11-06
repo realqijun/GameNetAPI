@@ -183,6 +183,7 @@ class GameNetSocket:
         while True:
             # If state becomes TERMINATED, terminates this thread
             if isinstance(self.state, GNSStateTerminated):
+                self.logger.logMetrics()
                 break
 
             # Repeatedly process packets until the state does not change anymore
