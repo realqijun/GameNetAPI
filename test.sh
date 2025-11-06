@@ -107,7 +107,6 @@ elif [ "$RELIABLE_MODE" == "unreliable" ] || [ "$RELIABLE_MODE" == "u" ]; then
     python3 -u -m tests.test_server_u > "$LOG_DIR/server_u.log" 2>&1 &
     SERVER_PID=$!
 
-    # Give server time to bind and listen
     sleep 1
 
     echo "--- Running Test Client (test driver) for unreliable data transfer ---"
@@ -116,8 +115,22 @@ elif [ "$RELIABLE_MODE" == "unreliable" ] || [ "$RELIABLE_MODE" == "u" ]; then
     CLIENT_EXIT_CODE=${PIPESTATUS[0]}
     set -e
 
+elif [ "$RELIABLE_MODE" == "ur" ] || [ "$RELIABLE_MODE" == "mixed" ]; then
+    echo "--- Running in mixed RELIABLE and UNRELIABLE mode ---"
+    echo "--- Starting Test Server (in background) for mixed data transfer ---"
+    python3 -u -m tests.test_server_ur > "$LOG_DIR/server_ur.log" 2>&1 &
+    SERVER_PID=$!
+
+    sleep 1
+
+    echo "--- Running Test Client (test driver) for mixed data transfer ---"
+    set +e
+    python3 -u -m tests.test_client_ur 2>&1 | tee "$LOG_DIR/client_ur.log"
+    CLIENT_EXIT_CODE=${PIPESTATUS[0]}
+    set -e
+
 else
-    echo "Invalid reliable mode. Use 'reliable/r' or 'unreliable/u'."
+    echo "Invalid reliable mode. Use 'reliable/r', 'unreliable/u', or 'mixed/ur'."
     exit 1
 fi
 
