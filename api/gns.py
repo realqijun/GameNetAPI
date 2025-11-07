@@ -13,7 +13,7 @@ from api.states.gnssaccept import GNSStateAccept
 from api.states.gnsssynsent import GNSStateSynSent
 from api.states.gnsstate import GNSState
 from api.states.gnssterminated import GNSStateTerminated
-from common import AddrPort, IllegalStateChangeException, SocketTimeoutException, RETRY_INCREMENT, MAX_RETRY
+from common import AddrPort, IllegalStateChangeException, SocketTimeoutException, MAX_RETRY
 from hudp import HUDPPacket
 from threading import Thread
 import time
@@ -209,7 +209,7 @@ class GameNetSocket:
                 self.context.sendWindow.put(
                     SendingHUDPPacket(HUDPPacket.createPureAck(self.context.seq, self.context.ack)))
 
-            time.sleep(0.005)
+            time.sleep(0.001)
 
     def __send(self):
         """
@@ -242,18 +242,20 @@ class GameNetSocket:
             sendWindowLen = self.context.sendWindow.qsize()
             for _ in range(sendWindowLen):
                 sendingPacket = self.context.sendWindow.get()
-                self.logger.logSend(sendingPacket)
                 packet = sendingPacket.packet
+
                 # If this packet is reliable and has already been sent and ACKed by remote
                 if packet.isReliable() and sendingPacket.retryLeft < MAX_RETRY and sendingPacket.packet.seq < self.context.rec:
                     continue
 
                 packetBytes = sendingPacket.packet.toBytes()
                 if self.context.destAddrPort:
+                    self.logger.logSend(sendingPacket)
                     self.context.sock.sendto(packetBytes, self.context.destAddrPort)
                 else:
                     raise RuntimeError("This branch is not supposed to be matched")
                 sendingPacket.decrementRetry()
+
                 # If there are still retries left, put it back into the buffer
                 if sendingPacket.retryLeft > 0:
                     self.context.sendBuffer.put(sendingPacket)
@@ -277,8 +279,6 @@ class GameNetSocket:
                     self.logger.logRecv(packet)
                     if packet.isReliable() and packet.isDataPacket():
                         self.context.shouldSendAck = True
-                    if packet.flags.isAck:
-                        self.context.rec = max(self.context.rec, packet.ack)
                     self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))
             except socket.timeout:
                 continue

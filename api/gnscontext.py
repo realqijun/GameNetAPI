@@ -65,7 +65,7 @@ class RecvingHUDPPacket:
         """
         Provide the ordering for the PriorityQueue.
         """
-        return self.arrivalTime < other.arrivalTime
+        return self.packet.seq < other.packet.seq
 
 
 class GNSContext:
@@ -109,7 +109,7 @@ class GNSContext:
         GameNetSocket has a routine to check when packets times out and put them into 'sendWindow'.
         """
 
-        self.recvWindow: Queue[RecvingHUDPPacket] = Queue()
+        self.recvWindow: PriorityQueue[RecvingHUDPPacket] = PriorityQueue()
         """
         PriorityQueue to store about-to-be-processed packets.
         The Queue is ordered from packets with lowest to highest sequence numbers (e.g. a packet with
