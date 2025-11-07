@@ -2,6 +2,7 @@ from api.gns import GameNetSocket
 from common import SocketTimeoutException
 
 server_addr = ("127.0.0.1", 6767)
+tests = ["tests/test_cases/1.txt", "tests/test_cases/2.txt", "tests/test_cases/3.txt"]
 
 def main():
     sock = GameNetSocket()
@@ -12,26 +13,30 @@ def main():
     # server accepted a connection
 
     try:
-        # receive hello message
+        # receive 2 test packets first
         data = sock.recv()
         if not data:
-            raise Exception("Client disconnected before sending hello")
-        print(f"Received first message: {data}")
+            raise Exception("Client disconnected before sending anyth")
+        data = sock.recv()
+        if not data:
+            raise Exception("Client disconnected before sending second message")
 
-        received_packets = 0
-        with open("tests/test_cases/2.txt", "r") as f:
-            data = f.readlines()
-            expected_len = len(data)
+        received_packets = 2  # already received 2 packets above
+        chunk = 1024
+        for file in tests:
+            with open(file, "r") as f:
+                expected_data = f.read()
+                while expected_data:
+                    packet = sock.recv()
+                    if not packet:
+                        raise Exception("Client disconnected unexpectedly")
+                    expected_chunk = expected_data[:chunk].encode()
+                    if packet != expected_chunk:
+                        raise Exception(f"Data mismatch for file {file}")
+                    expected_data = expected_data[chunk:]
+                    received_packets += 1
 
-            for i in range(expected_len):
-                recv_data = sock.recv()
-                if not data:
-                    print("Client disconnected early")
-                    break
-                assert recv_data == data[i].encode() # check if they are in order
-                received_packets += 1
-
-        print(f"Received {received_packets}/{expected_len} packets")
+        print(f"Total packets received: {received_packets}")
 
     except SocketTimeoutException:
         print("Server timed out waiting for packet")

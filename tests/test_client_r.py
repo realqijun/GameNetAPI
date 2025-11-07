@@ -3,6 +3,7 @@ from time import sleep
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
+tests = ["tests/test_cases/1.txt", "tests/test_cases/2.txt", "tests/test_cases/3.txt"]
 
 def main():
     client = GameNetSocket()
@@ -13,20 +14,27 @@ def main():
 
     # client connected
 
-    # test single packet
-    client.send(b"hello world this is client sending a packet", True)
+    # test empty data and single byte
+    client.send(b"", True)
+    client.send(b"a", True)
     sleep(0.5)
     # look for rtt print
 
-    with open("tests/test_cases/2.txt", "r") as f:
-        data = f.readlines() # cant send entire file because underlying udp layer max payload is 65507 bytes
-        for line in data:
-            client.send(line.encode(), True) # reliable send
-            sleep(0.01) # slight delay to avoid overwhelming the server and to also give time for receiving acks
-                        # remove if dont want to see so many RTT prints
+    chunk = 1024
+    reliable_packets_sent = 2  # already sent 2 packets above
+
+    for file in tests:
+        with open(file, "r") as f:
+            data = f.read()
+            while data:
+                client.send(data[:chunk].encode(), True)  # reliable send
+                reliable_packets_sent += 1
+                data = data[chunk:]
+                sleep(0.1) # sleep to avoid overwhelming the server, remove if dont want to see acks
 
     # all data sent
     client.close()
-
+    print(f"Reliable packets sent: {reliable_packets_sent}")
+    
 if __name__ == "__main__":
     main()
