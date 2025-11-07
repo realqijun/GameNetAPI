@@ -4,6 +4,7 @@ import random
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
+tests = ["tests/test_cases/1.txt", "tests/test_cases/2.txt", "tests/test_cases/3.txt"]
 
 def main():
     client = GameNetSocket()
@@ -14,13 +15,16 @@ def main():
 
     # client connected
 
-    with open("tests/test_cases/3.txt", "r") as f:
-        data = f.readlines()
-        reliable = True
-        for line in data:
-            client.send(line.encode(), reliable)
-            if random.random() <= 0.7:
-                reliable = not reliable
+    chunk = 1024
+
+    for test_file in tests:
+        with open(test_file, "r") as f:
+            data = f.read()
+            while data:
+                reliable = random.choice([True, False])
+                client.send(data[:chunk].encode(), reliable)
+                data = data[chunk:]
+                sleep(0.1)
 
     # all data sent
     client.close()

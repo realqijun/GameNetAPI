@@ -92,3 +92,755 @@ PLAYER 4 exit
 PLAYER 4 logout
 PLAYER 5 exit
 PLAYER 5 logout
+PLAYER 1 login
+PLAYER 1 login SUCCESS
+PLAYER 2 login
+PLAYER 2 login SUCCESS
+PLAYER 3 login
+PLAYER 3 login FAILURE (Invalid Credentials)
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 4 login
+PLAYER 4 login SUCCESS
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 2 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 2 match_found
+PLAYER 1 match_accept
+PLAYER 2 match_decline
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 3 join_match (Queue: Quick_Play)
+PLAYER 4 join_match (Queue: Quick_Play)
+PLAYER 3 match_found
+PLAYER 4 match_found
+PLAYER 3 match_accept
+PLAYER 4 match_accept
+MATCH 1 server_init (Map: Forest_Edge)
+MATCH 1 match_start
+PLAYER 3 update_position 10.5, 3.2, 0.0
+PLAYER 4 update_position 8.1, 5.7, 0.0
+PLAYER 3 send_message "gl"
+PLAYER 4 receive_message "gl"
+PLAYER 4 update_position 8.0, 5.9, 0.0
+PLAYER 3 ability_use 'Fireball' (Target: PLAYER 4)
+PLAYER 4 take_damage 15
+PLAYER 4 update_position 7.8, 6.0, 0.0
+PLAYER 3 update_position 11.0, 3.0, 0.0
+PLAYER 5 login
+PLAYER 5 login SUCCESS
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept_timeout
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 4 ability_use 'Heal' (Target: Self)
+PLAYER 4 update_health 85
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 send_message "nice shot"
+PLAYER 3 receive_message "nice shot"
+PLAYER 3 player_disconnect
+MATCH 1 pause_invoked (Player 3 disconnect)
+PLAYER 2 exit
+PLAYER 2 logout
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 3 session_reconnect (Match: 1)
+MATCH 1 pause_ended
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 update_position 7.0, 6.5, 0.0
+PLAYER 3 ability_use 'Ice_Spike' (Target: PLAYER 4)
+PLAYER 4 take_damage 20
+PLAYER 4 update_position 6.8, 6.5, 0.0
+PLAYER 3 update_position 11.5, 3.0, 0.0
+PLAYER 4 ability_use 'Shield_Bash' (Target: PLAYER 3)
+PLAYER 3 take_damage 5
+PLAYER 3 update_status 'Stunned' (Duration: 1.5s)
+PLAYER 4 update_position 11.0, 3.0, 0.0
+PLAYER 3 update_status 'Normal'
+PLAYER 3 match_win
+PLAYER 4 match_loss
+MATCH 1 match_end
+PLAYER 3 quit
+PLAYER 4 quit
+PLAYER 1 join_match_cancel
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept
+MATCH 2 server_init (Map: Urban_Assault)
+MATCH 2 match_start
+PLAYER 1 update_position 100.1, 250.5, 10.0
+PLAYER 5 update_position 105.7, 240.2, 10.0
+PLAYER 1 send_message "gg"
+PLAYER 5 receive_message "gg"
+PLAYER 5 player_disconnect
+MATCH 2 server_error (Host disconnected)
+MATCH 2 match_end (Result: Draw)
+PLAYER 1 quit
+PLAYER 1 logout
+PLAYER 3 logout
+PLAYER 4 exit
+PLAYER 4 logout
+PLAYER 5 exit
+PLAYER 5 logout
+PLAYER 1 login
+PLAYER 1 login SUCCESS
+PLAYER 2 login
+PLAYER 2 login SUCCESS
+PLAYER 3 login
+PLAYER 3 login FAILURE (Invalid Credentials)
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 4 login
+PLAYER 4 login SUCCESS
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 2 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 2 match_found
+PLAYER 1 match_accept
+PLAYER 2 match_decline
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 3 join_match (Queue: Quick_Play)
+PLAYER 4 join_match (Queue: Quick_Play)
+PLAYER 3 match_found
+PLAYER 4 match_found
+PLAYER 3 match_accept
+PLAYER 4 match_accept
+MATCH 1 server_init (Map: Forest_Edge)
+MATCH 1 match_start
+PLAYER 3 update_position 10.5, 3.2, 0.0
+PLAYER 4 update_position 8.1, 5.7, 0.0
+PLAYER 3 send_message "gl"
+PLAYER 4 receive_message "gl"
+PLAYER 4 update_position 8.0, 5.9, 0.0
+PLAYER 3 ability_use 'Fireball' (Target: PLAYER 4)
+PLAYER 4 take_damage 15
+PLAYER 4 update_position 7.8, 6.0, 0.0
+PLAYER 3 update_position 11.0, 3.0, 0.0
+PLAYER 5 login
+PLAYER 5 login SUCCESS
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept_timeout
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 4 ability_use 'Heal' (Target: Self)
+PLAYER 4 update_health 85
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 send_message "nice shot"
+PLAYER 3 receive_message "nice shot"
+PLAYER 3 player_disconnect
+MATCH 1 pause_invoked (Player 3 disconnect)
+PLAYER 2 exit
+PLAYER 2 logout
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 3 session_reconnect (Match: 1)
+MATCH 1 pause_ended
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 update_position 7.0, 6.5, 0.0
+PLAYER 3 ability_use 'Ice_Spike' (Target: PLAYER 4)
+PLAYER 4 take_damage 20
+PLAYER 4 update_position 6.8, 6.5, 0.0
+PLAYER 3 update_position 11.5, 3.0, 0.0
+PLAYER 4 ability_use 'Shield_Bash' (Target: PLAYER 3)
+PLAYER 3 take_damage 5
+PLAYER 3 update_status 'Stunned' (Duration: 1.5s)
+PLAYER 4 update_position 11.0, 3.0, 0.0
+PLAYER 3 update_status 'Normal'
+PLAYER 3 match_win
+PLAYER 4 match_loss
+MATCH 1 match_end
+PLAYER 3 quit
+PLAYER 4 quit
+PLAYER 1 join_match_cancel
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept
+MATCH 2 server_init (Map: Urban_Assault)
+MATCH 2 match_start
+PLAYER 1 update_position 100.1, 250.5, 10.0
+PLAYER 5 update_position 105.7, 240.2, 10.0
+PLAYER 1 send_message "gg"
+PLAYER 5 receive_message "gg"
+PLAYER 5 player_disconnect
+MATCH 2 server_error (Host disconnected)
+MATCH 2 match_end (Result: Draw)
+PLAYER 1 quit
+PLAYER 1 logout
+PLAYER 3 logout
+PLAYER 4 exit
+PLAYER 4 logout
+PLAYER 5 exit
+PLAYER 5 logout
+PLAYER 1 login
+PLAYER 1 login SUCCESS
+PLAYER 2 login
+PLAYER 2 login SUCCESS
+PLAYER 3 login
+PLAYER 3 login FAILURE (Invalid Credentials)
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 4 login
+PLAYER 4 login SUCCESS
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 2 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 2 match_found
+PLAYER 1 match_accept
+PLAYER 2 match_decline
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 3 join_match (Queue: Quick_Play)
+PLAYER 4 join_match (Queue: Quick_Play)
+PLAYER 3 match_found
+PLAYER 4 match_found
+PLAYER 3 match_accept
+PLAYER 4 match_accept
+MATCH 1 server_init (Map: Forest_Edge)
+MATCH 1 match_start
+PLAYER 3 update_position 10.5, 3.2, 0.0
+PLAYER 4 update_position 8.1, 5.7, 0.0
+PLAYER 3 send_message "gl"
+PLAYER 4 receive_message "gl"
+PLAYER 4 update_position 8.0, 5.9, 0.0
+PLAYER 3 ability_use 'Fireball' (Target: PLAYER 4)
+PLAYER 4 take_damage 15
+PLAYER 4 update_position 7.8, 6.0, 0.0
+PLAYER 3 update_position 11.0, 3.0, 0.0
+PLAYER 5 login
+PLAYER 5 login SUCCESS
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept_timeout
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 4 ability_use 'Heal' (Target: Self)
+PLAYER 4 update_health 85
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 send_message "nice shot"
+PLAYER 3 receive_message "nice shot"
+PLAYER 3 player_disconnect
+MATCH 1 pause_invoked (Player 3 disconnect)
+PLAYER 2 exit
+PLAYER 2 logout
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 3 session_reconnect (Match: 1)
+MATCH 1 pause_ended
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 update_position 7.0, 6.5, 0.0
+PLAYER 3 ability_use 'Ice_Spike' (Target: PLAYER 4)
+PLAYER 4 take_damage 20
+PLAYER 4 update_position 6.8, 6.5, 0.0
+PLAYER 3 update_position 11.5, 3.0, 0.0
+PLAYER 4 ability_use 'Shield_Bash' (Target: PLAYER 3)
+PLAYER 3 take_damage 5
+PLAYER 3 update_status 'Stunned' (Duration: 1.5s)
+PLAYER 4 update_position 11.0, 3.0, 0.0
+PLAYER 3 update_status 'Normal'
+PLAYER 3 match_win
+PLAYER 4 match_loss
+MATCH 1 match_end
+PLAYER 3 quit
+PLAYER 4 quit
+PLAYER 1 join_match_cancel
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept
+MATCH 2 server_init (Map: Urban_Assault)
+MATCH 2 match_start
+PLAYER 1 update_position 100.1, 250.5, 10.0
+PLAYER 5 update_position 105.7, 240.2, 10.0
+PLAYER 1 send_message "gg"
+PLAYER 5 receive_message "gg"
+PLAYER 5 player_disconnect
+MATCH 2 server_error (Host disconnected)
+MATCH 2 match_end (Result: Draw)
+PLAYER 1 quit
+PLAYER 1 logout
+PLAYER 3 logout
+PLAYER 4 exit
+PLAYER 4 logout
+PLAYER 5 exit
+PLAYER 5 logout
+PLAYER 1 login
+PLAYER 1 login SUCCESS
+PLAYER 2 login
+PLAYER 2 login SUCCESS
+PLAYER 3 login
+PLAYER 3 login FAILURE (Invalid Credentials)
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 4 login
+PLAYER 4 login SUCCESS
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 2 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 2 match_found
+PLAYER 1 match_accept
+PLAYER 2 match_decline
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 3 join_match (Queue: Quick_Play)
+PLAYER 4 join_match (Queue: Quick_Play)
+PLAYER 3 match_found
+PLAYER 4 match_found
+PLAYER 3 match_accept
+PLAYER 4 match_accept
+MATCH 1 server_init (Map: Forest_Edge)
+MATCH 1 match_start
+PLAYER 3 update_position 10.5, 3.2, 0.0
+PLAYER 4 update_position 8.1, 5.7, 0.0
+PLAYER 3 send_message "gl"
+PLAYER 4 receive_message "gl"
+PLAYER 4 update_position 8.0, 5.9, 0.0
+PLAYER 3 ability_use 'Fireball' (Target: PLAYER 4)
+PLAYER 4 take_damage 15
+PLAYER 4 update_position 7.8, 6.0, 0.0
+PLAYER 3 update_position 11.0, 3.0, 0.0
+PLAYER 5 login
+PLAYER 5 login SUCCESS
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept_timeout
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 4 ability_use 'Heal' (Target: Self)
+PLAYER 4 update_health 85
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 send_message "nice shot"
+PLAYER 3 receive_message "nice shot"
+PLAYER 3 player_disconnect
+MATCH 1 pause_invoked (Player 3 disconnect)
+PLAYER 2 exit
+PLAYER 2 logout
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 3 session_reconnect (Match: 1)
+MATCH 1 pause_ended
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 update_position 7.0, 6.5, 0.0
+PLAYER 3 ability_use 'Ice_Spike' (Target: PLAYER 4)
+PLAYER 4 take_damage 20
+PLAYER 4 update_position 6.8, 6.5, 0.0
+PLAYER 3 update_position 11.5, 3.0, 0.0
+PLAYER 4 ability_use 'Shield_Bash' (Target: PLAYER 3)
+PLAYER 3 take_damage 5
+PLAYER 3 update_status 'Stunned' (Duration: 1.5s)
+PLAYER 4 update_position 11.0, 3.0, 0.0
+PLAYER 3 update_status 'Normal'
+PLAYER 3 match_win
+PLAYER 4 match_loss
+MATCH 1 match_end
+PLAYER 3 quit
+PLAYER 4 quit
+PLAYER 1 join_match_cancel
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept
+MATCH 2 server_init (Map: Urban_Assault)
+MATCH 2 match_start
+PLAYER 1 update_position 100.1, 250.5, 10.0
+PLAYER 5 update_position 105.7, 240.2, 10.0
+PLAYER 1 send_message "gg"
+PLAYER 5 receive_message "gg"
+PLAYER 5 player_disconnect
+MATCH 2 server_error (Host disconnected)
+MATCH 2 match_end (Result: Draw)
+PLAYER 1 quit
+PLAYER 1 logout
+PLAYER 3 logout
+PLAYER 4 exit
+PLAYER 4 logout
+PLAYER 5 exit
+PLAYER 5 logout
+PLAYER 1 login
+PLAYER 1 login SUCCESS
+PLAYER 2 login
+PLAYER 2 login SUCCESS
+PLAYER 3 login
+PLAYER 3 login FAILURE (Invalid Credentials)
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 4 login
+PLAYER 4 login SUCCESS
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 2 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 2 match_found
+PLAYER 1 match_accept
+PLAYER 2 match_decline
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 3 join_match (Queue: Quick_Play)
+PLAYER 4 join_match (Queue: Quick_Play)
+PLAYER 3 match_found
+PLAYER 4 match_found
+PLAYER 3 match_accept
+PLAYER 4 match_accept
+MATCH 1 server_init (Map: Forest_Edge)
+MATCH 1 match_start
+PLAYER 3 update_position 10.5, 3.2, 0.0
+PLAYER 4 update_position 8.1, 5.7, 0.0
+PLAYER 3 send_message "gl"
+PLAYER 4 receive_message "gl"
+PLAYER 4 update_position 8.0, 5.9, 0.0
+PLAYER 3 ability_use 'Fireball' (Target: PLAYER 4)
+PLAYER 4 take_damage 15
+PLAYER 4 update_position 7.8, 6.0, 0.0
+PLAYER 3 update_position 11.0, 3.0, 0.0
+PLAYER 5 login
+PLAYER 5 login SUCCESS
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept_timeout
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 4 ability_use 'Heal' (Target: Self)
+PLAYER 4 update_health 85
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 send_message "nice shot"
+PLAYER 3 receive_message "nice shot"
+PLAYER 3 player_disconnect
+MATCH 1 pause_invoked (Player 3 disconnect)
+PLAYER 2 exit
+PLAYER 2 logout
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 3 session_reconnect (Match: 1)
+MATCH 1 pause_ended
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 update_position 7.0, 6.5, 0.0
+PLAYER 3 ability_use 'Ice_Spike' (Target: PLAYER 4)
+PLAYER 4 take_damage 20
+PLAYER 4 update_position 6.8, 6.5, 0.0
+PLAYER 3 update_position 11.5, 3.0, 0.0
+PLAYER 4 ability_use 'Shield_Bash' (Target: PLAYER 3)
+PLAYER 3 take_damage 5
+PLAYER 3 update_status 'Stunned' (Duration: 1.5s)
+PLAYER 4 update_position 11.0, 3.0, 0.0
+PLAYER 3 update_status 'Normal'
+PLAYER 3 match_win
+PLAYER 4 match_loss
+MATCH 1 match_end
+PLAYER 3 quit
+PLAYER 4 quit
+PLAYER 1 join_match_cancel
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept
+MATCH 2 server_init (Map: Urban_Assault)
+MATCH 2 match_start
+PLAYER 1 update_position 100.1, 250.5, 10.0
+PLAYER 5 update_position 105.7, 240.2, 10.0
+PLAYER 1 send_message "gg"
+PLAYER 5 receive_message "gg"
+PLAYER 5 player_disconnect
+MATCH 2 server_error (Host disconnected)
+MATCH 2 match_end (Result: Draw)
+PLAYER 1 quit
+PLAYER 1 logout
+PLAYER 3 logout
+PLAYER 4 exit
+PLAYER 4 logout
+PLAYER 5 exit
+PLAYER 5 logout
+PLAYER 1 login
+PLAYER 1 login SUCCESS
+PLAYER 2 login
+PLAYER 2 login SUCCESS
+PLAYER 3 login
+PLAYER 3 login FAILURE (Invalid Credentials)
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 4 login
+PLAYER 4 login SUCCESS
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 2 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 2 match_found
+PLAYER 1 match_accept
+PLAYER 2 match_decline
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 3 join_match (Queue: Quick_Play)
+PLAYER 4 join_match (Queue: Quick_Play)
+PLAYER 3 match_found
+PLAYER 4 match_found
+PLAYER 3 match_accept
+PLAYER 4 match_accept
+MATCH 1 server_init (Map: Forest_Edge)
+MATCH 1 match_start
+PLAYER 3 update_position 10.5, 3.2, 0.0
+PLAYER 4 update_position 8.1, 5.7, 0.0
+PLAYER 3 send_message "gl"
+PLAYER 4 receive_message "gl"
+PLAYER 4 update_position 8.0, 5.9, 0.0
+PLAYER 3 ability_use 'Fireball' (Target: PLAYER 4)
+PLAYER 4 take_damage 15
+PLAYER 4 update_position 7.8, 6.0, 0.0
+PLAYER 3 update_position 11.0, 3.0, 0.0
+PLAYER 5 login
+PLAYER 5 login SUCCESS
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept_timeout
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 4 ability_use 'Heal' (Target: Self)
+PLAYER 4 update_health 85
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 send_message "nice shot"
+PLAYER 3 receive_message "nice shot"
+PLAYER 3 player_disconnect
+MATCH 1 pause_invoked (Player 3 disconnect)
+PLAYER 2 exit
+PLAYER 2 logout
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 3 session_reconnect (Match: 1)
+MATCH 1 pause_ended
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 update_position 7.0, 6.5, 0.0
+PLAYER 3 ability_use 'Ice_Spike' (Target: PLAYER 4)
+PLAYER 4 take_damage 20
+PLAYER 4 update_position 6.8, 6.5, 0.0
+PLAYER 3 update_position 11.5, 3.0, 0.0
+PLAYER 4 ability_use 'Shield_Bash' (Target: PLAYER 3)
+PLAYER 3 take_damage 5
+PLAYER 3 update_status 'Stunned' (Duration: 1.5s)
+PLAYER 4 update_position 11.0, 3.0, 0.0
+PLAYER 3 update_status 'Normal'
+PLAYER 3 match_win
+PLAYER 4 match_loss
+MATCH 1 match_end
+PLAYER 3 quit
+PLAYER 4 quit
+PLAYER 1 join_match_cancel
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept
+MATCH 2 server_init (Map: Urban_Assault)
+MATCH 2 match_start
+PLAYER 1 update_position 100.1, 250.5, 10.0
+PLAYER 5 update_position 105.7, 240.2, 10.0
+PLAYER 1 send_message "gg"
+PLAYER 5 receive_message "gg"
+PLAYER 5 player_disconnect
+MATCH 2 server_error (Host disconnected)
+MATCH 2 match_end (Result: Draw)
+PLAYER 1 quit
+PLAYER 1 logout
+PLAYER 3 logout
+PLAYER 4 exit
+PLAYER 4 logout
+PLAYER 5 exit
+PLAYER 5 logout
+PLAYER 1 login
+PLAYER 1 login SUCCESS
+PLAYER 2 login
+PLAYER 2 login SUCCESS
+PLAYER 3 login
+PLAYER 3 login FAILURE (Invalid Credentials)
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 4 login
+PLAYER 4 login SUCCESS
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 2 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 2 match_found
+PLAYER 1 match_accept
+PLAYER 2 match_decline
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 3 join_match (Queue: Quick_Play)
+PLAYER 4 join_match (Queue: Quick_Play)
+PLAYER 3 match_found
+PLAYER 4 match_found
+PLAYER 3 match_accept
+PLAYER 4 match_accept
+MATCH 1 server_init (Map: Forest_Edge)
+MATCH 1 match_start
+PLAYER 3 update_position 10.5, 3.2, 0.0
+PLAYER 4 update_position 8.1, 5.7, 0.0
+PLAYER 3 send_message "gl"
+PLAYER 4 receive_message "gl"
+PLAYER 4 update_position 8.0, 5.9, 0.0
+PLAYER 3 ability_use 'Fireball' (Target: PLAYER 4)
+PLAYER 4 take_damage 15
+PLAYER 4 update_position 7.8, 6.0, 0.0
+PLAYER 3 update_position 11.0, 3.0, 0.0
+PLAYER 5 login
+PLAYER 5 login SUCCESS
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept_timeout
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 4 ability_use 'Heal' (Target: Self)
+PLAYER 4 update_health 85
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 send_message "nice shot"
+PLAYER 3 receive_message "nice shot"
+PLAYER 3 player_disconnect
+MATCH 1 pause_invoked (Player 3 disconnect)
+PLAYER 2 exit
+PLAYER 2 logout
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 3 session_reconnect (Match: 1)
+MATCH 1 pause_ended
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 update_position 7.0, 6.5, 0.0
+PLAYER 3 ability_use 'Ice_Spike' (Target: PLAYER 4)
+PLAYER 4 take_damage 20
+PLAYER 4 update_position 6.8, 6.5, 0.0
+PLAYER 3 update_position 11.5, 3.0, 0.0
+PLAYER 4 ability_use 'Shield_Bash' (Target: PLAYER 3)
+PLAYER 3 take_damage 5
+PLAYER 3 update_status 'Stunned' (Duration: 1.5s)
+PLAYER 4 update_position 11.0, 3.0, 0.0
+PLAYER 3 update_status 'Normal'
+PLAYER 3 match_win
+PLAYER 4 match_loss
+MATCH 1 match_end
+PLAYER 3 quit
+PLAYER 4 quit
+PLAYER 1 join_match_cancel
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept
+MATCH 2 server_init (Map: Urban_Assault)
+MATCH 2 match_start
+PLAYER 1 update_position 100.1, 250.5, 10.0
+PLAYER 5 update_position 105.7, 240.2, 10.0
+PLAYER 1 send_message "gg"
+PLAYER 5 receive_message "gg"
+PLAYER 5 player_disconnect
+MATCH 2 server_error (Host disconnected)
+MATCH 2 match_end (Result: Draw)
+PLAYER 1 quit
+PLAYER 1 logout
+PLAYER 3 logout
+PLAYER 4 exit
+PLAYER 4 logout
+PLAYER 5 exit
+PLAYER 5 logout
+PLAYER 1 login
+PLAYER 1 login SUCCESS
+PLAYER 2 login
+PLAYER 2 login SUCCESS
+PLAYER 3 login
+PLAYER 3 login FAILURE (Invalid Credentials)
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 4 login
+PLAYER 4 login SUCCESS
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 2 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 2 match_found
+PLAYER 1 match_accept
+PLAYER 2 match_decline
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 3 join_match (Queue: Quick_Play)
+PLAYER 4 join_match (Queue: Quick_Play)
+PLAYER 3 match_found
+PLAYER 4 match_found
+PLAYER 3 match_accept
+PLAYER 4 match_accept
+MATCH 1 server_init (Map: Forest_Edge)
+MATCH 1 match_start
+PLAYER 3 update_position 10.5, 3.2, 0.0
+PLAYER 4 update_position 8.1, 5.7, 0.0
+PLAYER 3 send_message "gl"
+PLAYER 4 receive_message "gl"
+PLAYER 4 update_position 8.0, 5.9, 0.0
+PLAYER 3 ability_use 'Fireball' (Target: PLAYER 4)
+PLAYER 4 take_damage 15
+PLAYER 4 update_position 7.8, 6.0, 0.0
+PLAYER 3 update_position 11.0, 3.0, 0.0
+PLAYER 5 login
+PLAYER 5 login SUCCESS
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept_timeout
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 4 ability_use 'Heal' (Target: Self)
+PLAYER 4 update_health 85
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 send_message "nice shot"
+PLAYER 3 receive_message "nice shot"
+PLAYER 3 player_disconnect
+MATCH 1 pause_invoked (Player 3 disconnect)
+PLAYER 2 exit
+PLAYER 2 logout
+PLAYER 3 login
+PLAYER 3 login SUCCESS
+PLAYER 3 session_reconnect (Match: 1)
+MATCH 1 pause_ended
+PLAYER 3 update_position 11.2, 3.1, 0.0
+PLAYER 4 update_position 7.0, 6.5, 0.0
+PLAYER 3 ability_use 'Ice_Spike' (Target: PLAYER 4)
+PLAYER 4 take_damage 20
+PLAYER 4 update_position 6.8, 6.5, 0.0
+PLAYER 3 update_position 11.5, 3.0, 0.0
+PLAYER 4 ability_use 'Shield_Bash' (Target: PLAYER 3)
+PLAYER 3 take_damage 5
+PLAYER 3 update_status 'Stunned' (Duration: 1.5s)
+PLAYER 4 update_position 11.0, 3.0, 0.0
+PLAYER 3 update_status 'Normal'
+PLAYER 3 match_win
+PLAYER 4 match_loss
+MATCH 1 match_end
+PLAYER 3 quit
+PLAYER 4 quit
+PLAYER 1 join_match_cancel
+PLAYER 5 join_match (Queue: Ranked_Solo)
+PLAYER 1 join_match (Queue: Ranked_Solo)
+PLAYER 1 match_found
+PLAYER 5 match_found
+PLAYER 1 match_accept
+PLAYER 5 match_accept
+MATCH 2 server_init (Map: Urban_Assault)
+MATCH 2 match_start
+PLAYER 1 update_position 100.1, 250.5, 10.0
+PLAYER 5 update_position 105.7, 240.2, 10.0
+PLAYER 1 send_message "gg"
+PLAYER 5 receive_message "gg"
+PLAYER 5 player_disconnect
+MATCH 2 server_error (Host disconnected)
+MATCH 2 match_end (Result: Draw)
+PLAYER 1 quit
+PLAYER 1 logout
+PLAYER 3 logout
+PLAYER 4 exit
+PLAYER 4 logout
+PLAYER 5 exit
+PLAYER 5 logout
