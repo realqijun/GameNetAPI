@@ -13,13 +13,15 @@ def main():
     # server accepted a connection
 
     try:
-        # receive hello message
+        # receive 2 test packets first
         data = sock.recv()
         if not data:
-            raise Exception("Client disconnected before sending hello")
-        print(f"Received first message: {data}")
+            raise Exception("Client disconnected before sending anyth")
+        data = sock.recv()
+        if not data:
+            raise Exception("Client disconnected before sending second message")
 
-        received_packets = 0
+        received_packets = 2  # already received 2 packets above
         chunk = 1024
         for file in tests:
             with open(file, "r") as f:

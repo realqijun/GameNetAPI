@@ -11,7 +11,6 @@ def main():
     sock.accept()
 
     received_packets = 0
-
     try:
         while True:
             data = sock.recv()

@@ -9,20 +9,28 @@ def main():
     sock = GameNetSocket()
     sock.bind(client_addr)
     sock.connect(server_addr)
+    sleep(0.5)
 
     # client connected
 
+    # empty data and single byte
+    sock.send(b"", False)
+    sock.send(b"a", False)
+
     chunk = 1024
+    unreliable_packets_sent = 2  # already sent 2 packets above
 
     for test_file in tests:
         with open(test_file, "r") as f:
             data = f.read()
             while data:
                 sock.send(data[:chunk].encode(), False)  # unreliable send
+                unreliable_packets_sent += 1
                 data = data[chunk:]
                 sleep(0.1)
 
     sock.close()
+    print(f"Unreliable packets sent: {unreliable_packets_sent}")
 
 if __name__ == "__main__":
     main()
