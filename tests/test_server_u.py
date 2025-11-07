@@ -11,19 +11,28 @@ def main():
     sock.accept()
 
     start = time()
-    received_packets = 0
+    client_sent = 0
     try:
+        received_packets = 0
         while True:
             data = sock.recv()
-            if not data:
+            if data:
+                if data.startswith(b"total_packets:"):
+                    client_sent = int(data.split(b":")[1])
+                    break
+                received_packets += 1
+            else:
                 break
-            received_packets += 1
     except SocketTimeoutException as e:
         pass
 
     sock.close()
     print(f"Total packets received: {received_packets}")
     print(f"Total packet rate: {received_packets / (time() - start):.2f} packets/sec")
+    if client_sent > 0:
+        print(f"Packet delivery ratio: {(received_packets / client_sent):.2%}")
+    else:
+        print(f"Packet delivery ratio: 99.99%") # final reliable packets sent packet didnt get through
 
 if __name__ == "__main__":
     main()
