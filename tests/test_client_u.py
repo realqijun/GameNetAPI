@@ -1,12 +1,10 @@
 import os
 from api.gns import GameNetSocket
 from time import sleep, time
+from tests.testconstant import TEST_DURATION, TARGET_RATE
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
-
-test_duration = 30
-target_rate = 100
 
 def main():
     sock = GameNetSocket()
@@ -14,10 +12,10 @@ def main():
     sock.connect(server_addr)
     sleep(0.5)
 
-    interval = 1.0 / target_rate
+    interval = 1.0 / TARGET_RATE
 
     start_time = time()
-    end_time = start_time + test_duration
+    end_time = start_time + TEST_DURATION
 
     packet_index = 0
     unreliable_sent = 0
