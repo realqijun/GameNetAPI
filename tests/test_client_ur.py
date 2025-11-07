@@ -4,10 +4,11 @@ import random
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
-tests = ["tests/test_cases/1.txt", "tests/test_cases/2.txt", "tests/test_cases/3.txt"]
-
-target_rate = 100
-interval = 1.0 / target_rate
+tests = ["tests/test_cases/1.txt",
+         "tests/test_cases/2.txt",
+         "tests/test_cases/3.txt",
+         "tests/test_cases/4.txt",
+         "tests/test_cases/5.txt"]
 
 def main():
     client = GameNetSocket()
@@ -15,8 +16,8 @@ def main():
     client.connect(server_addr)
     sleep(0.5)
 
-    # client connected
-
+    target_rate = 100
+    interval = 1.0 / target_rate
     chunk = 1019
     reliable_packets_sent = 0
     unreliable_packets_sent = 0

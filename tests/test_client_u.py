@@ -3,7 +3,11 @@ from time import sleep, time
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
-tests = ["tests/test_cases/1.txt", "tests/test_cases/2.txt", "tests/test_cases/3.txt"]
+tests = ["tests/test_cases/1.txt",
+         "tests/test_cases/2.txt",
+         "tests/test_cases/3.txt",
+         "tests/test_cases/4.txt",
+         "tests/test_cases/5.txt"]
 
 def main():
     client = GameNetSocket()
@@ -15,25 +19,17 @@ def main():
     target_rate = 100
     interval = 1.0 / target_rate
 
-    # test empty data and single byte
-    client.send(b"", False)
-    client.send(b"a", False)
-
-    sleep(0.1)
-    # look for rtt print
-
     chunk = 1024
-    packets_sent = 2  # already sent 2 packets above
+    packets_sent = 0
 
     for file in tests:
         with open(file, "r") as f:
             data = f.read()
             next_time_to_send = time()
             while data:
-                current_time = time()
-                if current_time < next_time_to_send:
-                    sleep(next_time_to_send - current_time)
-                client.send(data[:chunk].encode(), False)  # reliable send
+                while time() < next_time_to_send:
+                    continue
+                client.send(data[:chunk].encode(), False)  # unreliable send
                 data = data[chunk:]
                 packets_sent += 1
                 next_time_to_send = time() + interval

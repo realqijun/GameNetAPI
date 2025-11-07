@@ -1,6 +1,6 @@
 from api.gns import GameNetSocket
 from common import SocketTimeoutException
-import socket
+from time import time
 
 server_addr = ("127.0.0.1", 6767)
 
@@ -10,6 +10,7 @@ def main():
     sock.listen()
     sock.accept()
 
+    start = time()
     received_packets = 0
     try:
         while True:
@@ -22,6 +23,7 @@ def main():
 
     sock.close()
     print(f"Total packets received: {received_packets}")
+    print(f"Total packet rate: {received_packets / (time() - start):.2f} packets/sec")
 
 if __name__ == "__main__":
     main()

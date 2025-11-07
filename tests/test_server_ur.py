@@ -1,3 +1,4 @@
+import time
 from api.gns import GameNetSocket
 from common import SocketTimeoutException
 
@@ -8,7 +9,7 @@ def main():
     sock.bind(server_addr)
     sock.listen()
     sock.accept()
-
+    start = time()
     reliable_packets_received = 0
     unreliable_packets_received = 0
 
@@ -27,6 +28,8 @@ def main():
     sock.close()
     print(f"Reliable packets received: {reliable_packets_received}")
     print(f"Unreliable packets received: {unreliable_packets_received}")
+    print(f"Total packet rate: {(reliable_packets_received + unreliable_packets_received) / (time() - start):.2f} packets/sec")
+
 
 if __name__ == "__main__":
     main()
