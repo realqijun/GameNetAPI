@@ -2,6 +2,8 @@ from api.gns import GameNetSocket
 from common import SocketTimeoutException
 from time import time
 
+from tests.testconstant import busy_wait_till_terminate
+
 server_addr = ("127.0.0.1", 6767)
 
 def main():
@@ -27,6 +29,7 @@ def main():
         pass
 
     sock.close()
+    busy_wait_till_terminate(sock)
     print(f"Total packets received: {received_packets}")
     print(f"Total packet rate: {received_packets / (time() - start):.2f} packets/sec")
     if client_sent > 0:

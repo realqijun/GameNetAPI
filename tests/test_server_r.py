@@ -1,7 +1,10 @@
 from math import ceil
 from api.gns import GameNetSocket
+from api.states.gnssterminated import GNSStateTerminated
 from common import SocketTimeoutException
-from time import time
+from time import time, sleep
+
+from tests.testconstant import busy_wait_till_terminate
 
 server_addr = ("127.0.0.1", 6767)
 
@@ -29,13 +32,13 @@ def main():
         print(f"An error occurred: {e}")
     finally:
         sock.close()
-        print("Server closed.")
-        print(f"Total packets received: {received_packets}")
-        print(f"Total packet rate: {received_packets / (time() - start):.2f} packets/sec")
+        busy_wait_till_terminate(sock)
+        print(f"Total packets received: {received_packets}", flush=True)
+        print(f"Total packet rate: {received_packets / (time() - start):.2f} packets/sec", flush=True)
         if client_sent > 0:
-            print(f"Packet delivery ratio: {(received_packets / client_sent):.2%}")
+            print(f"Packet delivery ratio: {(received_packets / client_sent):.2%}", flush=True)
         else:
-            print(f"Packet delivery ratio: 99.99%")
+            print(f"Packet delivery ratio: 99.99%", flush=True)
 
 if __name__ == "__main__":
     main()

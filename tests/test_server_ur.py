@@ -2,6 +2,8 @@ from time import time
 from api.gns import GameNetSocket
 from common import SocketTimeoutException
 
+from tests.testconstant import busy_wait_till_terminate
+
 server_addr = ("127.0.0.1", 6767)
 
 def main():
@@ -37,6 +39,7 @@ def main():
         print(f"An error occurred: {e}")
 
     sock.close()
+    busy_wait_till_terminate(sock)
     print(f"Reliable packets received: {reliable_packets_received}")
     print(f"Unreliable packets received: {unreliable_packets_received}")
     print(f"Total packet rate: {(reliable_packets_received + unreliable_packets_received) / (time() - start):.2f} packets/sec")

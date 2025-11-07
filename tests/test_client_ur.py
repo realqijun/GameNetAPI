@@ -2,7 +2,7 @@ import os
 from api.gns import GameNetSocket
 from time import sleep, time
 import random
-from tests.testconstant import TEST_DURATION, TARGET_RATE
+from tests.testconstant import TEST_DURATION, TARGET_RATE, busy_wait_till_terminate
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
@@ -40,8 +40,9 @@ def main():
     sock.send(b"total_packets_reliable:" + str(reliable_packets_sent).encode() + b";total_packets_unreliable:" + str(unreliable_packets_sent).encode(), True)
     # all data sent
     sock.close()
-    print(f"Reliable packets sent: {reliable_packets_sent}")
-    print(f"Unreliable packets sent: {unreliable_packets_sent}")
+    busy_wait_till_terminate(sock)
+    print(f"Reliable packets sent: {reliable_packets_sent}", flush=True)
+    print(f"Unreliable packets sent: {unreliable_packets_sent}", flush=True)
 
 if __name__ == "__main__":
     main()

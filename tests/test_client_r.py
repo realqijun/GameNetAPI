@@ -1,7 +1,7 @@
 import os
 from api.gns import GameNetSocket
 from time import sleep, time
-from tests.testconstant import TEST_DURATION, TARGET_RATE
+from tests.testconstant import TEST_DURATION, TARGET_RATE, busy_wait_till_terminate
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
@@ -36,8 +36,7 @@ def main():
     sock.send(b"total_packets:" + str(reliable_sent).encode(), True)
     # all data sent
     sock.close()
-
-    print("\n--- CLIENT TEST FINISHED ---")
+    busy_wait_till_terminate(sock)
     print(f"Total packets sent: {reliable_sent}")
 
 if __name__ == "__main__":
