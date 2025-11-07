@@ -1,10 +1,13 @@
 from api.gns import GameNetSocket
-from time import sleep
+from time import sleep, time
 import random
 
 client_addr = ("127.0.0.1", 4896)
 server_addr = ("127.0.0.1", 6767)
 tests = ["tests/test_cases/1.txt", "tests/test_cases/2.txt", "tests/test_cases/3.txt"]
+
+target_rate = 100
+interval = 1.0 / target_rate
 
 def main():
     client = GameNetSocket()
@@ -21,8 +24,12 @@ def main():
     for test_file in tests:
         with open(test_file, "r") as f:
             data = f.read()
+            next_time_to_send = time()
             while data:
+                current_time = time()
                 reliable = random.choice([True, False])
+                if current_time < next_time_to_send:
+                    sleep(next_time_to_send - current_time)
                 if reliable:
                     client.send(('REL: ' + data[:chunk]).encode(), reliable)  # reliable send
                     reliable_packets_sent += 1
@@ -30,7 +37,8 @@ def main():
                     client.send(('UNR: ' + data[:chunk]).encode(), reliable)  # unreliable send
                     unreliable_packets_sent += 1
                 data = data[chunk:]
-                sleep(0.1)
+                next_time_to_send = time() + interval
+
 
     # all data sent
     client.close()

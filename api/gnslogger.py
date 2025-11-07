@@ -126,7 +126,7 @@ class GNSLogger:
             self.log(message)
 
         if packet.flags.isAck and packet.ack > self.lastAck:
-            rtt = round((packet.time - self.sendSeqRecord[self.lastAck]) * 1000)
+            rtt = round((time.time() - self.sendSeqRecord[self.lastAck]) * 1000)
             if self.enableLogMetrics:
                 self.logMtrc(f"SEQ {self.lastAck} -> {packet.ack}: RTT ≈ {rtt} ms")
             self.lastAck = packet.ack

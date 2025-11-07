@@ -243,7 +243,7 @@ class GameNetSocket:
             for _ in range(sendWindowLen):
                 sendingPacket = self.context.sendWindow.get()
                 self.logger.logSend(sendingPacket)
-
+                packet = sendingPacket.packet
                 # If this packet is reliable and has already been sent and ACKed by remote
                 if packet.isReliable() and sendingPacket.retryLeft < MAX_RETRY and sendingPacket.packet.seq < self.context.rec:
                     continue
@@ -277,6 +277,8 @@ class GameNetSocket:
                     self.logger.logRecv(packet)
                     if packet.isReliable() and packet.isDataPacket():
                         self.context.shouldSendAck = True
+                    if packet.flags.isAck:
+                        self.context.rec = max(self.context.rec, packet.ack)
                     self.context.recvWindow.put(RecvingHUDPPacket(HUDPPacket.fromBytes(data), addrPort))
             except socket.timeout:
                 continue
