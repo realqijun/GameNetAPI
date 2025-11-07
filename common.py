@@ -9,12 +9,12 @@ MAX_SEND_WINDOW_SIZE = 4096
 Maximum number of packets that can be sent at the same time
 """
 
-MAX_RETRY = 5
+MAX_RETRY = 10
 """
 Maximum number of times a packet get (re)transmitted
 """
 
-SKIP_AHEAD_TIMEOUT = 0.500
+SKIP_AHEAD_TIMEOUT = 1.000
 """
 How long does it take to skip the current ACK if the socket is stuck there
 """
@@ -24,7 +24,7 @@ RETRY_INCREMENT = 0.100
 The time offset to retransmit this packet
 """
 
-TIME_WAIT_TIME = 0.500
+TIME_WAIT_TIME = 1.000
 """
 The amount of time to wait for in TIME_WAIT
 """
